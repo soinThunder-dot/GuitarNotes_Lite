@@ -1,192 +1,169 @@
 package com.guitartabquiz
 
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.NestedScrollView
 
 /**
- * MainActivity - Guitar Tab Quiz
- * Flow:
- * 1. Show treble clef staff with 4 random notes (謎面)
- * 2. For each note, show 4 GuitarTabView options (2x2 grid)
- * 3. User selects → immediate correct/wrong feedback + MP3 plays
- * 4. Score shown at end, option to restart
+ * MainActivity - Guitar Tab Quiz (Landscape)
  *
- * Guitar transposition note:
- * Staff shows WRITTEN pitch (e.g. C4 written) which SOUNDS as C3 (one octave lower)
- * The tab options are based on ACTUAL sounding pitch
+ * Screen layout (landscape, horizontal scroll):
+ *
+ *  [Title bar]
+ *  [HorizontalScrollView]
+ *    [4 x QuizNoteCard side by side]
+ *  [Score bar + Next Round button (appears after all 4 answered)]
+ *
+ * Each QuizNoteCard shows:
+ *   - Single note on treble staff (turns RED/GREEN after answer)
+ *   - Full interactive 6x24 fretboard to tap
+ *   - Feedback text
+ *
+ * After all 4 answered → score shown + "Next Round" button.
+ * Tap Next Round → new set of 4 random notes.
  */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var soundManager: SoundManager
-    private lateinit var scrollView: NestedScrollView
-    private lateinit var mainContainer: LinearLayout
+    private lateinit var rootLayout: LinearLayout
+    private lateinit var scoreBar: LinearLayout
+    private lateinit var scoreTv: TextView
+    private lateinit var nextBtn: Button
 
     private var currentNotes: List<Note> = emptyList()
     private var score = 0
     private var answeredCount = 0
+    private val totalPerRound = 4
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         soundManager = SoundManager(this)
 
-        // Root scroll layout
-        scrollView = NestedScrollView(this).apply {
+        // Full-screen dark background
+        rootLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.parseColor("#0D0D1A"))
         }
-
-        mainContainer = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(16, 16, 16, 32)
-        }
-        scrollView.addView(mainContainer)
-        setContentView(scrollView)
+        setContentView(rootLayout)
 
         startNewRound()
     }
 
     private fun startNewRound() {
-        mainContainer.removeAllViews()
+        rootLayout.removeAllViews()
         score = 0
         answeredCount = 0
-        currentNotes = MusicData.randomQuizNotes()
+        currentNotes = MusicData.randomQuizNotes(totalPerRound)
 
-        // App title
-        addHeader()
-
-        // Transposition notice
-        addTransposeNotice()
-
-        // Staff view showing all 4 notes
-        val staffView = StaffView(this).apply {
-            notes = currentNotes
+        // --- Top title bar ---
+        val titleBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setBackgroundColor(Color.parseColor("#16213E"))
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(16, 8, 16, 8)
         }
-        val staffCard = cardWrap(staffView, "謎面 — 高音譜 (記譜音，實際低一個八度)")
-        mainContainer.addView(staffCard)
+        val titleTv = TextView(this).apply {
+            text = "Guitar Tab Quiz  —  謎面"
+            textSize = 16f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.parseColor("#4FC3F7"))
+        }
+        val subtitleTv = TextView(this).apply {
+            text = "  |  Written pitch (sounds 8va lower)  |  Tap the correct fret"
+            textSize = 11f
+            setTextColor(Color.parseColor("#888888"))
+        }
+        titleBar.addView(titleTv)
+        titleBar.addView(subtitleTv)
+        rootLayout.addView(titleBar, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ))
 
-        addSpacing(16)
+        // --- Horizontal scroll view for 4 cards side by side ---
+        val hScroll = HorizontalScrollView(this).apply {
+            setBackgroundColor(Color.parseColor("#0D0D1A"))
+            isFillViewport = true
+        }
+        val cardsRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
 
-        // One QuizNoteCard per note
         currentNotes.forEachIndexed { idx, note ->
             val card = QuizNoteCard(this, note, soundManager) { isCorrect ->
                 if (isCorrect) score++
                 answeredCount++
-                if (answeredCount == currentNotes.size) {
-                    showResult()
-                }
+                if (answeredCount == totalPerRound) showRoundComplete()
             }
-            val wrapper = cardWrap(card, "Question ${idx + 1} / ${currentNotes.size}")
-            mainContainer.addView(wrapper)
-            addSpacing(12)
-        }
-    }
 
-    private fun addHeader() {
-        val title = TextView(this).apply {
-            text = "Guitar Tab Quiz"
-            textSize = 22f
-            setTextColor(Color.parseColor("#4FC3F7"))
+            // Each card takes equal width = 1/4 screen
+            val cardParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
+            cardParams.setMargins(4, 4, 4, 4)
+            cardsRow.addView(card, cardParams)
+
+            // Divider between cards
+            if (idx < currentNotes.size - 1) {
+                val div = View(this).apply { setBackgroundColor(Color.parseColor("#2A2A4A")) }
+                cardsRow.addView(div, LinearLayout.LayoutParams(2, LinearLayout.LayoutParams.MATCH_PARENT))
+            }
+        }
+
+        hScroll.addView(cardsRow, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.MATCH_PARENT
+        ))
+
+        rootLayout.addView(hScroll, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+        ))
+
+        // --- Score bar (hidden until round complete) ---
+        scoreBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(0, 8, 0, 4)
-            typeface = android.graphics.Typeface.DEFAULT_BOLD
-        }
-        mainContainer.addView(title)
-        val sub = TextView(this).apply {
-            text = "Read the treble clef → find the correct TAB"
-            textSize = 13f
-            setTextColor(Color.parseColor("#AAAAAA"))
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 12)
-        }
-        mainContainer.addView(sub)
-    }
-
-    private fun addTransposeNotice() {
-        val notice = TextView(this).apply {
-            text = "Note: Guitar is a transposing instrument.\n" +
-                    "Written C4 on staff = sounds C3 on guitar (one octave lower).\n" +
-                    "Tab positions shown are ACTUAL sounding pitches."
-            textSize = 11f
-            setTextColor(Color.parseColor("#FFD700"))
-            gravity = Gravity.CENTER
-            setPadding(12, 8, 12, 12)
-            setBackgroundColor(Color.parseColor("#1A1200"))
-        }
-        mainContainer.addView(notice)
-        addSpacing(8)
-    }
-
-    private fun showResult() {
-        addSpacing(16)
-
-        val resultCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24, 24, 24, 24)
             setBackgroundColor(Color.parseColor("#16213E"))
-            gravity = Gravity.CENTER
+            setPadding(16, 8, 16, 8)
+            visibility = View.GONE
         }
-
-        val emoji = if (score == currentNotes.size) "Perfect!" else if (score >= currentNotes.size / 2) "Good!" else "Keep Practicing!"
-        val scoreText = TextView(this).apply {
-            text = "Score: $score / ${currentNotes.size}  —  $emoji"
-            textSize = 20f
-            setTextColor(when {
-                score == currentNotes.size -> Color.parseColor("#4CAF50")
-                score >= currentNotes.size / 2 -> Color.parseColor("#FFD700")
-                else -> Color.parseColor("#F44336")
-            })
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 16)
-        }
-        resultCard.addView(scoreText)
-
-        val restartBtn = Button(this).apply {
-            text = "New Round"
+        scoreTv = TextView(this).apply {
             textSize = 16f
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(0, 0, 24, 0)
+        }
+        nextBtn = Button(this).apply {
+            text = "Next Round  ➔"
+            textSize = 14f
             setTextColor(Color.WHITE)
-            setBackgroundColor(Color.parseColor("#4FC3F7"))
-            setPadding(32, 16, 32, 16)
+            setBackgroundColor(Color.parseColor("#1565C0"))
+            setPadding(24, 8, 24, 8)
             setOnClickListener { startNewRound() }
         }
-        resultCard.addView(restartBtn)
-
-        mainContainer.addView(resultCard)
-
-        // Scroll to result
-        scrollView.post {
-            scrollView.fullScroll(View.FOCUS_DOWN)
-        }
-    }
-
-    private fun cardWrap(child: View, label: String): LinearLayout {
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(0, 0, 0, 0)
-            setBackgroundColor(Color.parseColor("#16213E"))
-
-            if (label.isNotEmpty()) {
-                val lbl = TextView(this@MainActivity).apply {
-                    text = label
-                    textSize = 12f
-                    setTextColor(Color.parseColor("#888888"))
-                    setPadding(12, 8, 12, 4)
-                }
-                addView(lbl)
-            }
-            addView(child)
-        }
-    }
-
-    private fun addSpacing(dp: Int) {
-        val v = View(this)
-        val px = (dp * resources.displayMetrics.density).toInt()
-        mainContainer.addView(v, LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, px
+        scoreBar.addView(scoreTv)
+        scoreBar.addView(nextBtn)
+        rootLayout.addView(scoreBar, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
         ))
+    }
+
+    private fun showRoundComplete() {
+        val emoji = when {
+            score == totalPerRound -> "Perfect!  🎉"
+            score >= totalPerRound * 3 / 4 -> "Great!"
+            score >= totalPerRound / 2 -> "Good!"
+            else -> "Keep Practicing!"
+        }
+        scoreTv.text = "Round Score: $score / $totalPerRound  —  $emoji"
+        scoreTv.setTextColor(when {
+            score == totalPerRound -> Color.parseColor("#4CAF50")
+            score >= totalPerRound / 2 -> Color.parseColor("#FFD700")
+            else -> Color.parseColor("#F44336")
+        })
+        scoreBar.visibility = View.VISIBLE
     }
 
     override fun onDestroy() {
