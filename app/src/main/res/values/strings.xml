@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Guitar Tab Quiz</string>
+    <string name="quiz_title">Guitar Tab Quiz</string>
+    <string name="quiz_subtitle">Read the treble clef, find the correct TAB</string>
+    <string name="new_round">New Round</string>
+    <string name="score_label">Score</string>
+    <string name="correct">Correct!</string>
+    <string name="wrong">Wrong</string>
+    <string name="perfect">Perfect!</string>
+    <string name="good">Good!</string>
+    <string name="keep_practicing">Keep Practicing!</string>
+    <string name="transposition_notice">Guitar is a transposing instrument.\nWritten C4 on treble clef sounds as C3 (one octave lower).\nTab options show actual sounding pitches.</string>
+    <string name="question_label">Question %1$d / %2$d</string>
+    <string name="staff_label">Riddle — Treble Clef (written pitch, sounds 8va lower)</string>
+</resources>
