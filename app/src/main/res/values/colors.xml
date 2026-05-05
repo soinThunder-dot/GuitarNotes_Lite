@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#4FC3F7</color>
+    <color name="colorPrimaryDark">#0288D1</color>
+    <color name="colorAccent">#F0E68C</color>
+    <color name="bgDark">#0D0D1A</color>
+    <color name="bgCard">#16213E</color>
+    <color name="bgOption">#0F3460</color>
+    <color name="correct">#4CAF50</color>
+    <color name="wrong">#F44336</color>
+    <color name="textPrimary">#FFFFFF</color>
+    <color name="textSecondary">#AAAAAA</color>
+    <color name="gold">#FFD700</color>
+    <color name="noteColor">#F0E68C</color>
+    <color name="tabHighlight">#4FC3F7</color>
+    <color name="staffLine">#CCCCCC</color>
+</resources>
