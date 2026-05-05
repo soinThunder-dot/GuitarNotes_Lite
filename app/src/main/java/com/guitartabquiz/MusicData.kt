@@ -2,12 +2,16 @@ package com.guitartabquiz
 
 // MusicData.kt - Music Theory Engine
 // Guitar is a transposing instrument: written pitch sounds 8va lower
-// Quiz range: Treble clef C4-B5 (notated), actual sounding C3-B4
+// Quiz range: E2-E6 (notated). C4+ shown on TREBLE clef, B3 and lower on BASS clef.
+// Boundary: midiNotated >= 60 (C4) -> TREBLE; midiNotated < 60 (B3 and below) -> BASS
+
+enum class Clef { TREBLE, BASS }
 
 data class Note(
     val name: String,
     val midiNotated: Int,
-    val midiActual: Int
+    val midiActual: Int,
+    val clef: Clef
 )
 
 // Guitar string open pitches (actual sounding MIDI)
@@ -23,14 +27,23 @@ data class TabPosition(
 }
 
 object MusicData {
-    // Natural notes only, notated C4-B5 (MIDI 60-83)
+    // Natural notes E2-E6 (notated)
+    // Treble clef: C4 (midiNotated=60) and above
+    // Bass clef:   B3 (midiNotated=59) and below
     val ALL_NOTES: List<Note> = buildList {
-        val names = listOf("C","D","E","F","G","A","B")
-        val offsets = listOf(0,2,4,5,7,9,11)
-        for (octave in 4..5) {
-            for (i in names.indices) {
-                val notated = 60 + (octave - 4) * 12 + offsets[i]
-                add(Note("${names[i]}$octave", notated, notated - 12))
+        val noteNames = listOf("C","D","E","F","G","A","B")
+        val semitoneOffsets = listOf(0,2,4,5,7,9,11)
+        // Build E2 to E6 inclusive
+        // E2 notated = MIDI 52, E6 notated = MIDI 88
+        for (octave in 2..6) {
+            for (i in noteNames.indices) {
+                val notated = 60 + (octave - 4) * 12 + semitoneOffsets[i]
+                // E2 notated = 52, skip notes below E2 (notated < 52)
+                if (notated < 52) continue
+                // E6 notated = 88, skip notes above E6 (notated > 88)
+                if (notated > 88) continue
+                val clef = if (notated >= 60) Clef.TREBLE else Clef.BASS
+                add(Note("${noteNames[i]}$octave", notated, notated - 12, clef))
             }
         }
     }
