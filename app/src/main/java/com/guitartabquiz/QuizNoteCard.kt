@@ -2,126 +2,127 @@ package com.guitartabquiz
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Typeface
 import android.view.Gravity
 import android.view.View
 import android.widget.*
 
 /**
- * QuizNoteCard - a card UI for one note's quiz question
- * Shows: note name header + 2x2 grid of GuitarTabView options
- * On selection: shows correct/wrong feedback, plays sound via SoundManager
+ * QuizNoteCard - one quiz card per note.
+ *
+ * Layout (landscape, vertical stack inside card):
+ *   [Note header label]
+ *   [StaffView  — single note on staff, turns RED/GREEN after answer]
+ *   [GuitarTabView — full interactive 6x24 fretboard]
+ *   [Feedback label — shows CORRECT / WRONG + correct position hint]
+ *
+ * No multiple-choice buttons. User taps directly on the fretboard.
+ * After the first tap the fretboard locks, all correct cells show green (HINT).
+ * Callback onAnswered(isCorrect) is fired once per card.
  */
 class QuizNoteCard(
     context: Context,
-    val note: Note,
+    private val note: Note,
     private val soundManager: SoundManager,
     private val onAnswered: (isCorrect: Boolean) -> Unit
 ) : LinearLayout(context) {
 
-    private val options: List<Pair<TabPosition, Boolean>> = MusicData.generateOptions(note)
+    private val correctTabs: Set<TabPosition> = MusicData.correctTabsForNote(note)
     private var answered = false
-    private val tabViews = mutableListOf<GuitarTabView>()
+
+    // Child views we need to reference after creation
+    private val staffView   = StaffView(context).apply { notes = listOf(note) }
+    private val fretboard   = GuitarTabView(context)
+    private val feedbackLbl = TextView(context)
 
     init {
         orientation = VERTICAL
-        setPadding(16, 16, 16, 16)
-        setBackgroundColor(Color.parseColor("#16213E"))
+        setBackgroundColor(Color.parseColor("#12122A"))
+        setPadding(0, 0, 0, 8)
 
-        // Note header
+        // --- Note name header ---
         val header = TextView(context).apply {
-            text = "Note: ${note.name}  (written for guitar)"
+            text = note.name
             textSize = 15f
+            typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.parseColor("#4FC3F7"))
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 12)
+            setPadding(0, 6, 0, 2)
         }
         addView(header)
 
-        // Instruction
-        val instruction = TextView(context).apply {
-            text = "Select the correct guitar TAB position:"
-            textSize = 12f
+        // --- Staff (single note) ---
+        addView(staffView, LayoutParams(LayoutParams.MATCH_PARENT, 0).also { it.weight = 1f })
+
+        // --- Instruction label ---
+        val instrLbl = TextView(context).apply {
+            text = "Tap the correct fret on the board below:"
+            textSize = 11f
             setTextColor(Color.parseColor("#AAAAAA"))
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 8)
+            setPadding(0, 2, 0, 2)
         }
-        addView(instruction)
+        addView(instrLbl)
 
-        // 2x2 grid of options
-        val grid = GridLayout(context).apply {
-            columnCount = 2
-            rowCount = 2
+        // --- Interactive fretboard ---
+        fretboard.onCellTapped = { string, fret ->
+            if (!answered) handleAnswer(string, fret)
         }
+        addView(fretboard, LayoutParams(LayoutParams.MATCH_PARENT, 0).also { it.weight = 3f })
 
-        options.forEachIndexed { idx, (tabPos, isCorrect) ->
-            val cellLayout = LinearLayout(context).apply {
-                orientation = VERTICAL
-                setPadding(6, 6, 6, 6)
-                setBackgroundColor(Color.parseColor("#0F3460"))
-                isClickable = true
-                isFocusable = true
+        // --- Feedback label (hidden until answer) ---
+        feedbackLbl.apply {
+            textSize = 13f
+            gravity = Gravity.CENTER
+            setPadding(8, 4, 8, 4)
+            visibility = View.GONE
+        }
+        addView(feedbackLbl)
+    }
+
+    private fun handleAnswer(string: Int, fret: Int) {
+        answered = true
+        fretboard.locked = true
+
+        val tapped = TabPosition(string, fret)
+        val isCorrect = correctTabs.contains(tapped)
+
+        // Colour the tapped cell
+        fretboard.setCellState(
+            string, fret,
+            if (isCorrect) GuitarTabView.CellState.CORRECT
+            else GuitarTabView.CellState.WRONG
+        )
+
+        // Reveal ALL correct positions as HINT (green), skip the one just tapped
+        for (tp in correctTabs) {
+            if (tp != tapped) {
+                fretboard.setCellState(tp.string, tp.fret, GuitarTabView.CellState.HINT)
             }
-
-            // Tab label above grid
-            val label = TextView(context).apply {
-                text = tabPos.displayLabel()
-                textSize = 11f
-                setTextColor(Color.parseColor("#CCCCCC"))
-                gravity = Gravity.CENTER
-                setPadding(0, 0, 0, 4)
-            }
-            cellLayout.addView(label)
-
-            // GuitarTabView
-            val tabView = GuitarTabView(context).apply {
-                tabPosition = tabPos
-                this.isCorrect = null
-            }
-            tabViews.add(tabView)
-            cellLayout.addView(tabView)
-
-            // Result text (hidden initially)
-            val resultText = TextView(context).apply {
-                text = ""
-                textSize = 13f
-                gravity = Gravity.CENTER
-                setPadding(0, 4, 0, 0)
-            }
-            cellLayout.addView(resultText)
-
-            cellLayout.setOnClickListener {
-                if (answered) return@setOnClickListener
-                answered = true
-
-                // Play sound
-                soundManager.play(tabPos.resourceName())
-
-                // Update all tabs with correct/wrong state
-                options.forEachIndexed { i, (tp, correct) ->
-                    tabViews[i].isCorrect = if (correct) true else {
-                        if (i == idx) false else null
-                    }
-                }
-
-                // Show feedback
-                resultText.text = if (isCorrect) "Correct!" else "Wrong"
-                resultText.setTextColor(
-                    if (isCorrect) Color.parseColor("#4CAF50") else Color.parseColor("#F44336")
-                )
-
-                onAnswered(isCorrect)
-            }
-
-            val params = GridLayout.LayoutParams().apply {
-                width = 0
-                height = GridLayout.LayoutParams.WRAP_CONTENT
-                columnSpec = GridLayout.spec(idx % 2, 1f)
-                rowSpec = GridLayout.spec(idx / 2)
-                setMargins(4, 4, 4, 4)
-            }
-            grid.addView(cellLayout, params)
         }
 
-        addView(grid)
+        // Update staff note colour
+        staffView.setNoteState(0, if (isCorrect) NoteState.CORRECT else NoteState.WRONG)
+
+        // Feedback text
+        feedbackLbl.apply {
+            visibility = View.VISIBLE
+            if (isCorrect) {
+                text = "\u2713  Correct!  ${note.name}  (${tapped.string}th string, fret ${tapped.fret})"
+                setTextColor(Color.parseColor("#4CAF50"))
+            } else {
+                val hint = correctTabs.minByOrNull { it.fret } ?: correctTabs.first()
+                text = "\u2717  Wrong.  Correct: ${hint.string}th string, fret ${hint.fret} (+ ${correctTabs.size - 1} more)"
+                setTextColor(Color.parseColor("#F44336"))
+            }
+        }
+
+        // Play sound (skippable — silently ignored if file absent)
+        try {
+            val tp = if (isCorrect) tapped else (correctTabs.minByOrNull { it.fret } ?: tapped)
+            soundManager.play(tp)
+        } catch (_: Exception) {}
+
+        onAnswered(isCorrect)
     }
 }
