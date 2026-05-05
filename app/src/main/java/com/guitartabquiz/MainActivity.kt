@@ -11,114 +11,115 @@ import androidx.appcompat.app.AppCompatActivity
 /**
  * MainActivity - Guitar Tab Quiz (Landscape)
  *
- * Screen layout (landscape, horizontal scroll):
+ * Screen layout (vertical stack, landscape):
  *
- *  [Title bar]
- *  [HorizontalScrollView]
- *    [4 x QuizNoteCard side by side]
- *  [Score bar + Next Round button (appears after all 4 answered)]
+ *   [Title bar]
+ *   [StaffView  - 1 staff showing ALL 4 notes; each turns GREEN/RED as answered]
+ *   [Status label - "Answering note 2/4: F4"]
+ *   [GuitarTabView - ONE shared 6x24 fretboard (144 cells)]
+ *   [Feedback label]
+ *   [Score bar + Next Round button  (visible only after all 4 answered)]
  *
- * Each QuizNoteCard shows:
- *   - Single note on treble staff (turns RED/GREEN after answer)
- *   - Full interactive 6x24 fretboard to tap
- *   - Feedback text
- *
- * After all 4 answered → score shown + "Next Round" button.
- * Tap Next Round → new set of 4 random notes.
+ * Flow:
+ *   1. 4 random notes drawn, shown on single staff.
+ *   2. User answers note 1 by tapping fretboard.
+ *      -> Correct cell turns GREEN; wrong cell RED + correct cells shown (HINT).
+ *      -> Staff note 1 turns GREEN or RED.
+ *   3. Fretboard resets, moves on to note 2, etc.
+ *   4. After note 4 answered -> score bar + "Next Round" button appear.
  */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var soundManager: SoundManager
     private lateinit var rootLayout: LinearLayout
+    private lateinit var staffView: StaffView
+    private lateinit var statusLabel: TextView
+    private lateinit var fretboard: GuitarTabView
+    private lateinit var feedbackLabel: TextView
     private lateinit var scoreBar: LinearLayout
     private lateinit var scoreTv: TextView
-    private lateinit var nextBtn: Button
 
-    private var currentNotes: List<Note> = emptyList()
-    private var score = 0
-    private var answeredCount = 0
     private val totalPerRound = 4
+    private var currentNotes: List<Note> = emptyList()
+    private var currentIndex = 0   // which note we are currently asking (0-based)
+    private var score = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         soundManager = SoundManager(this)
+        buildLayout()
+        startNewRound()
+    }
 
-        // Full-screen dark background
+    // ---------------------------------------------------------------
+    // Build the permanent view hierarchy once
+    // ---------------------------------------------------------------
+    private fun buildLayout() {
         rootLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.parseColor("#0D0D1A"))
         }
         setContentView(rootLayout)
 
-        startNewRound()
-    }
-
-    private fun startNewRound() {
-        rootLayout.removeAllViews()
-        score = 0
-        answeredCount = 0
-        currentNotes = MusicData.randomQuizNotes(totalPerRound)
-
-        // --- Top title bar ---
+        // --- Title bar ---
         val titleBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setBackgroundColor(Color.parseColor("#16213E"))
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(16, 8, 16, 8)
+            setPadding(16, 6, 16, 6)
         }
-        val titleTv = TextView(this).apply {
+        titleBar.addView(TextView(this).apply {
             text = "Guitar Tab Quiz  —  謎面"
-            textSize = 16f
+            textSize = 15f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.parseColor("#4FC3F7"))
-        }
-        val subtitleTv = TextView(this).apply {
-            text = "  |  Written pitch (sounds 8va lower)  |  Tap the correct fret"
+        })
+        titleBar.addView(TextView(this).apply {
+            text = "  |  Read the staff → tap the correct fret"
             textSize = 11f
-            setTextColor(Color.parseColor("#888888"))
-        }
-        titleBar.addView(titleTv)
-        titleBar.addView(subtitleTv)
+            setTextColor(Color.parseColor("#777777"))
+        })
         rootLayout.addView(titleBar, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         ))
 
-        // --- Horizontal scroll view for 4 cards side by side ---
-        val hScroll = HorizontalScrollView(this).apply {
-            setBackgroundColor(Color.parseColor("#0D0D1A"))
-            isFillViewport = true
-        }
-        val cardsRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-        }
-
-        currentNotes.forEachIndexed { idx, note ->
-            val card = QuizNoteCard(this, note, soundManager) { isCorrect ->
-                if (isCorrect) score++
-                answeredCount++
-                if (answeredCount == totalPerRound) showRoundComplete()
-            }
-
-            // Each card takes equal width = 1/4 screen
-            val cardParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
-            cardParams.setMargins(4, 4, 4, 4)
-            cardsRow.addView(card, cardParams)
-
-            // Divider between cards
-            if (idx < currentNotes.size - 1) {
-                val div = View(this).apply { setBackgroundColor(Color.parseColor("#2A2A4A")) }
-                cardsRow.addView(div, LinearLayout.LayoutParams(2, LinearLayout.LayoutParams.MATCH_PARENT))
-            }
-        }
-
-        hScroll.addView(cardsRow, LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.MATCH_PARENT
+        // --- Single StaffView (4 notes) ---
+        staffView = StaffView(this)
+        rootLayout.addView(staffView, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 0, 2f
         ))
 
-        rootLayout.addView(hScroll, LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+        // --- Status label ---
+        statusLabel = TextView(this).apply {
+            textSize = 13f
+            setTextColor(Color.parseColor("#FFD700"))
+            gravity = Gravity.CENTER
+            setPadding(0, 4, 0, 4)
+            setBackgroundColor(Color.parseColor("#0D0D1A"))
+        }
+        rootLayout.addView(statusLabel, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ))
+
+        // --- ONE shared fretboard ---
+        fretboard = GuitarTabView(this)
+        fretboard.onCellTapped = { string, fret -> handleAnswer(string, fret) }
+        rootLayout.addView(fretboard, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 0, 5f
+        ))
+
+        // --- Feedback label ---
+        feedbackLabel = TextView(this).apply {
+            textSize = 13f
+            gravity = Gravity.CENTER
+            setPadding(0, 4, 0, 4)
+            text = ""
+        }
+        rootLayout.addView(feedbackLabel, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
         ))
 
         // --- Score bar (hidden until round complete) ---
@@ -134,7 +135,7 @@ class MainActivity : AppCompatActivity() {
             typeface = Typeface.DEFAULT_BOLD
             setPadding(0, 0, 24, 0)
         }
-        nextBtn = Button(this).apply {
+        val nextBtn = Button(this).apply {
             text = "Next Round  ➔"
             textSize = 14f
             setTextColor(Color.WHITE)
@@ -150,6 +151,96 @@ class MainActivity : AppCompatActivity() {
         ))
     }
 
+    // ---------------------------------------------------------------
+    // Start / reset a new round of 4 notes
+    // ---------------------------------------------------------------
+    private fun startNewRound() {
+        currentNotes = MusicData.randomQuizNotes(totalPerRound)
+        currentIndex = 0
+        score = 0
+
+        // Show all 4 notes on staff, all DEFAULT (gold)
+        staffView.notes = currentNotes
+
+        scoreBar.visibility = View.GONE
+        feedbackLabel.text = ""
+        fretboard.resetAllCells()
+
+        showCurrentQuestion()
+    }
+
+    // ---------------------------------------------------------------
+    // Update status label to reflect current question
+    // ---------------------------------------------------------------
+    private fun showCurrentQuestion() {
+        if (currentIndex >= totalPerRound) return
+        val note = currentNotes[currentIndex]
+        statusLabel.text = "Note ${currentIndex + 1} / $totalPerRound  —  Find: ${note.name}"
+        feedbackLabel.text = ""
+        fretboard.resetAllCells()
+    }
+
+    // ---------------------------------------------------------------
+    // Handle a fretboard tap
+    // ---------------------------------------------------------------
+    private fun handleAnswer(string: Int, fret: Int) {
+        if (currentIndex >= totalPerRound) return
+        if (fretboard.locked) return
+
+        fretboard.locked = true
+        val note = currentNotes[currentIndex]
+        val correctTabs = MusicData.correctTabsForNote(note)
+        val tapped = TabPosition(string, fret)
+        val isCorrect = correctTabs.contains(tapped)
+
+        if (isCorrect) score++
+
+        // Colour the tapped cell
+        fretboard.setCellState(
+            string, fret,
+            if (isCorrect) GuitarTabView.CellState.CORRECT else GuitarTabView.CellState.WRONG
+        )
+        // Show all other correct cells as HINT
+        for (tp in correctTabs) {
+            if (tp != tapped) fretboard.setCellState(tp.string, tp.fret, GuitarTabView.CellState.HINT)
+        }
+
+        // Colour this note on the staff
+        staffView.setNoteState(currentIndex, if (isCorrect) NoteState.CORRECT else NoteState.WRONG)
+
+        // Feedback text
+        if (isCorrect) {
+            feedbackLabel.text = "\u2713  Correct!  ${note.name}  —  string $string, fret $fret"
+            feedbackLabel.setTextColor(Color.parseColor("#4CAF50"))
+        } else {
+            val hint = correctTabs.minByOrNull { it.fret } ?: correctTabs.first()
+            feedbackLabel.text = "\u2717  Wrong.  ${note.name}  —  e.g. string ${hint.string}, fret ${hint.fret}"
+            feedbackLabel.setTextColor(Color.parseColor("#F44336"))
+        }
+
+        // Play sound
+        try {
+            val tp = if (isCorrect) tapped else (correctTabs.minByOrNull { it.fret } ?: tapped)
+            soundManager.play(tp.resourceName())
+        } catch (_: Exception) {}
+
+        currentIndex++
+
+        if (currentIndex >= totalPerRound) {
+            // Round complete
+            statusLabel.text = "Round complete!"
+            showRoundComplete()
+        } else {
+            // Pause briefly then advance to next note
+            fretboard.postDelayed({
+                showCurrentQuestion()
+            }, 1200)
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // Show final score
+    // ---------------------------------------------------------------
     private fun showRoundComplete() {
         val emoji = when {
             score == totalPerRound -> "Perfect!  🎉"
@@ -157,7 +248,7 @@ class MainActivity : AppCompatActivity() {
             score >= totalPerRound / 2 -> "Good!"
             else -> "Keep Practicing!"
         }
-        scoreTv.text = "Round Score: $score / $totalPerRound  —  $emoji"
+        scoreTv.text = "Score: $score / $totalPerRound  —  $emoji"
         scoreTv.setTextColor(when {
             score == totalPerRound -> Color.parseColor("#4CAF50")
             score >= totalPerRound / 2 -> Color.parseColor("#FFD700")
