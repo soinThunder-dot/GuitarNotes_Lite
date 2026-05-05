@@ -10,21 +10,12 @@ package com.guitartabquiz
 // 所有同一 package 的檔案可以互相直接使用對方的 class / function
 
 // --------------------------------------------------------
-// 【重要音樂知識】吉他是「移調樂器」
+// 【重要音樂知識】吉他是「移調樂器」// 【重要音樂知識】吉他是「移調樂器」
 // 樂譜上寫的音比實際發音高 8 度（一個八度 = 12 個半音）
 // 例如：樂譜寫 C4（中央 C），吉他實際發出的是 C3
-// 所以：midiNotated（譜面 MIDI）= midiActual（實際 MIDI）+ 12
-// --------------------------------------------------------
+// 本 App 謎面範圍：記譜 E3–E7（全用高音譜，不需低音譜）
+// 對應吉他實際音域：E2 (MIDI 40) – E6 (MIDI 88)
 
-// ========================================================
-// 【Enum Class】Clef — 譜號類型
-// enum class = 「列舉類別」，用來定義一組固定選項
-// 好比交通燈只有紅、黃、綠三個選項，不會有其他值
-// ========================================================
-enum class Clef {
-    TREBLE, // 高音譜號（𝄞）：用於 C4（含）以上的音，五線的最低線是 E4
-    BASS    // 低音譜號（𝄢）：用於 B3（含）以下的音，五線的最低線是 G2
-}
 
 // ========================================================
 // 【Data Class】Note — 代表一個「音符」
@@ -45,9 +36,6 @@ data class Note(
                             // = midiNotated - 12（低一個八度）
                             // 用於判斷指板上哪個格子的音高匹配
 
-    val clef: Clef          // 這個音應該畫在哪種譜號上（高音 or 低音）
-                            // 由 midiNotated 自動決定：
-                            // >= 60 (C4) -> TREBLE，< 60 -> BASS
 )
 
 // ========================================================
@@ -131,23 +119,20 @@ object MusicData {
                 // octave 5 時：60 + 1*12 + offset = 72..83
                 val notated = 60 + (octave - 4) * 12 + semitoneOffsets[i]
 
-                // 過濾：只保留 E2（MIDI 52）到 E6（MIDI 88）的音
-                // E2: octave=2, E的offset=4 -> 60+(2-4)*12+4 = 60-24+4 = 40+4... = 52
-                // continue = 跳過這次迴圈，繼續下一個
-                if (notated < 52) continue  // 低於 E2，跳過
-                if (notated > 88) continue  // 高於 E6，跳過
+                // 過濾：只保留 E3 (MIDI 52) 到 E7 (MIDI 100) 的音                // E2: octave=2, E的offset=4 -> 60+(2-4)*12+4 = 60-24+4 = 40+4... = 52
+                // E3: octave=3, E的offset=4 -> 60+(3-4)*12+4 = 60-12+4 = 52                if (notated < 52) continue  // 低於 E2，跳過
+                                // continue = 跳過這次迴圈，繼續下一個
+                                if (notated < 52) continue  // 低於 E3，跳過
+                                if (notated > 100) continue  // 高於 E7，跳過
 
-                // 決定譜號：C4（MIDI 60）以上用高音譜，以下用低音譜
-                val clef = if (notated >= 60) Clef.TREBLE else Clef.BASS
                 // ↑ Kotlin 的 if 可以作為「表達式」直接回傳值（不必寫 return）
 
                 // 加入 Note 物件到列表
                 // midiActual = notated - 12（吉他移調）
-                add(Note("${noteNames[i]}$octave", notated, notated - 12, clef))
-                // 例：noteNames[2]="E", octave=4 -> name="E4", notated=64, actual=52, TREBLE
+add(Note("${noteNames[i]}$octave", notated, notated - 12))                // 例：noteNames[2]="E", octave=4 -> name="E4", notated=64, actual=52, TREBLE
             }
         }
-        // 最終 ALL_NOTES 共有 29 個音符（E2 到 E6 的自然音）
+        // 最終 ALL_NOTES 共有E3 到 E7 的自然音）
     }
 
     // --------------------------------------------------------
