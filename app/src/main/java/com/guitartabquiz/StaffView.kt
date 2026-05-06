@@ -66,8 +66,11 @@ class StaffView @JvmOverloads constructor(
 
         val staffLeft = w * 0.05f  // 左邊界
         val staffRight = w - w * 0.05f  // 右邊界
-        val lineSpacing = h * 0.055f  // 線間距（比例縮小讓高音有空間）
-        val staffBottom = h * 0.95f  // 五線譜底線（降低20%，給頂部65%更多空間）
+        // 絕對擴展：基於當前 lineSpacing，往上延伸 65%，往下延伸 20%
+        val baseLineSpacing = h * 0.055f  // 基準線間距
+        val expandedLineSpacing = baseLineSpacing * 1.65f  // 往上擴展 65% (線間距變大)
+        val lineSpacing = expandedLineSpacing
+        val staffBottom = h * 0.98f  // 底線盡量往下（給上方更多空間）
         for (i in 0..4) {
             val y = staffBottom - i * lineSpacing
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
