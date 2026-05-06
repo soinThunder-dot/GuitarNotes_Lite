@@ -102,8 +102,8 @@ class MainActivity : AppCompatActivity() {
         rootLayout.addView(fretboard, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             0,
-            3f  // weight = 3 (減少空間給 StaffView)        )
-
+            3f  // weight = 3
+                    ))
         // --- 反饋文字（顯示對/錯和提示）---
         feedbackLabel = TextView(this).apply {
             textSize = 13f
