@@ -64,10 +64,10 @@ class StaffView @JvmOverloads constructor(
         val h = height.toFloat()
         canvas.drawRect(0f, 0f, w, h, bgPaint)
 
-        val staffLeft = 0.5f
-        val staffRight = w - 0.5f
-        val staffBottom = h * 0.75f  // 五線譜最底線（75% 位置，給上方留空間                val lineSpacing = h * 0.12f  // 線間距
-        val lineSpacing = h * 0.10f  // 線間距 10%，讓五線譜更大        // 繪 5 條線
+        val staffLeft = w * 0.05f  // 左邊界
+        val staffRight = w - w * 0.05f  // 右邊界
+        val lineSpacing = h * 0.08f  // 線間距（改小讓高音不超出畫面）
+        val staffBottom = h * 0.90f  // 五線譜底線（往下移讓高音有空間顯示）
         for (i in 0..4) {
             val y = staffBottom - i * lineSpacing
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
