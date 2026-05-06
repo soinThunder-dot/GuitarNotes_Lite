@@ -66,8 +66,7 @@ class StaffView @JvmOverloads constructor(
 
         val staffLeft = 56f
         val staffRight = w - 14f
-        val staffBottom = h * 0.70f
-        val lineSpacing = h * 0.12f
+        val staffBottom = h * 0.85f  // 五線譜最底線位置（從 0.70 改成 0.85 以給高音符更多上方空間）        val lineSpacing = h * 0.12f
 
         // 繪 5 條線
         for (i in 0..4) {
