@@ -65,8 +65,8 @@ class StaffView @JvmOverloads constructor(
         canvas.drawRect(0f, 0f, w, h, bgPaint)
 
         // 恢復原始值！
-        val staffLeft = 64f
-        val staffRight = w - 20f  
+        val staffLeft = 4f
+        val staffRight = w - 4f  
         val staffBottom = h * 0.75f
         val lineSpacing = h * 0.10f  // 原始線間距
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
