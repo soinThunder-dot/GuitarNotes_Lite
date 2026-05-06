@@ -39,7 +39,7 @@ jobs:
       
       - name: Rename APK with build number
         run: |
-          BUILD_NUM=48
+          BUILD_NUM=${{ github.run_number }}  # 自動遞增 build number
           mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/GuitarNotes_Lite_build${BUILD_NUM}.apk
 
       - name: Create Release and Upload APK
