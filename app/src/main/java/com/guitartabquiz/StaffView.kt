@@ -64,26 +64,23 @@ class StaffView @JvmOverloads constructor(
         val h = height.toFloat()
         canvas.drawRect(0f, 0f, w, h, bgPaint)
 
-        // ======== MATCH ANSWER (GuitarTabView) WIDTH & SCALE HEIGHT ========
-        // ANSWER 繪製寬度：w * 0.94 (boardLeft=0.06, 繪製區 0.94)
-        // QUESTION 舊寬度：w * 0.90 (staffLeft=0.05, staffRight=0.95)
-        // 新寬度 = 0.94w，新高度 = 舊高度 * (0.94 / 0.90) = 舊高度 * 1.044
+        // ======== 固定 STAT（ABSOLUTE VALUES） ========
+        // 假設 QUESTION view 高度 約 400dp（根據 weight=3 與 screen 高度）
+        // 當前 lineSpacing 約 = 400 * 0.055 * 1.044 * 1.65 ≈ 38dp
+        // 擴大 1.5 倍：38 * 1.5 = 57dp
+        // 上下各 1.25 倍：top margin +25%, bottom margin +25%
         
-        val answerWidth = w * 0.94f  // 匹配 ANSWER (fretboard) 寬度
-        val staffLeft = w * 0.06f  // 左邊界，匹配 fretboard 的 boardLeft
-        val staffRight = staffLeft + answerWidth  // 右邊界 = 左 + ANSWER寬度
+        val fixedLineSpacing = 60f  // 固定線間距 60 pixels（擴大後）
+        val staffLeft = w * 0.06f  // 左邊界，匹配 ANSWER
+        val staffRight = w - w * 0.06f  // 右邊界
         
-        // 舊 lineSpacing 基準：h * 0.055
-        // 按比例縮放：新高度 = 舊高度 / 舊寬度 * 新寬度
-        val oldWidthRatio = 0.90f  // 舊 QUESTION 寬度比例
-        val newWidthRatio = 0.94f  // 新 QUESTION 寬度比例
-        val scaleRatio = newWidthRatio / oldWidthRatio  // 1.044
-        
-        val baseLineSpacing = h * 0.055f  // 基準線間距
-        val scaledLineSpacing = baseLineSpacing * scaleRatio  // 按比例放大
-        val expandedLineSpacing = scaledLineSpacing * 1.65f  // 再擴展 65%
-        val lineSpacing = expandedLineSpacing
-        val staffBottom = h * 0.98f  // 底線盡量往下（給上方更多空間）
+        // 計算 staffBottom：讓整個 staff 區域在 view 中間
+        // E7 (step=21) 需要的空間 = 21 * (60/2) = 630 pixels
+        // 五線譜 4 條線 = 4 * 60 = 240 pixels
+        // 總高度 約 630 + 50 (top margin) + 80 (bottom margin) = 760 pixels
+        // staffBottom = h - 80 (bottom margin)
+        val staffBottom = h - 80f  // 底部留 80px margin
+        val lineSpacing = fixedLineSpacing
         for (i in 0..4) {
             val y = staffBottom - i * lineSpacing
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
