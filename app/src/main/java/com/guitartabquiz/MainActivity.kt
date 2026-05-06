@@ -74,16 +74,14 @@ class MainActivity : AppCompatActivity() {
         // --- 五線譜（單一 StaffView，顯示全部 4 個音符）---
         // 使用 layout weight = 2，佔據較少的高度
         staffView = StaffView(this)
-        staffView.scaleX = 0.5f  // 水平縮小到 50%
-        staffView.scaleY = 0.5f  // 垂直縮小到 50%
         rootLayout.addView(staffView, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,   // 寬度填滿
             0,                                         // 高度 0（使用 weight）
-            3f  // weight = 3 （增加以顯示更多五線譜空間
+            2f  // weight = 2（恢復到 Version 1.0，FULL MARGIN）
                         ))
 
         // --- 狀態文字（顯示「正在答第 x/4 題」）---
-        statusLabel = TextView(this).apply {
+        5f  // weight = 5（恢復到 Version 1.0，FULL MARGIN）
             textSize = 13f
             setTextColor(Color.parseColor("#FFD700"))  // 金色
             gravity = Gravity.CENTER
