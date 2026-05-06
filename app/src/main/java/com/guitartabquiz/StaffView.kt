@@ -70,19 +70,17 @@ class StaffView @JvmOverloads constructor(
         // 擴大 1.5 倍：38 * 1.5 = 57dp
         // 上下各 1.25 倍：top margin +25%, bottom margin +25%
         
-        val fixedLineSpacing = 60f  // 固定線間距 60 pixels（擴大後）
-        val staffLeft = w * 0.06f  // 左邊界，匹配 ANSWER
+        // 不放大元素，只增加 margin！
+        val staffLeft = w * 0.06f  // 匹配 ANSWER
         val staffRight = w - w * 0.06f  // 右邊界
+        val lineSpacing = h * 0.045f  // 保持原始大小（不放大！）
         
-        // 計算 staffBottom：讓整個 staff 區域在 view 中間
-        // E7 (step=21) 需要的空間 = 21 * (60/2) = 630 pixels
-        // 五線譜 4 條線 = 4 * 60 = 240 pixels
-        // 總高度 約 630 + 50 (top margin) + 80 (bottom margin) = 760 pixels
-        // staffBottom = h - 80 (bottom margin)
-        val staffBottom = h - 80f  // 底部留 80px margin
-        val lineSpacing = fixedLineSpacing
-        for (i in 0..4) {
-            val y = staffBottom - i * lineSpacing
+        // 只增加 top padding 讓高音有空間
+        val topPadding = h * 0.15f  // 15% top padding
+        val bottomPadding = h * 0.05f  // 5% bottom padding
+        
+        // staffBottom 往上移動留空間
+        val staffBottom = h - bottomPadding
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
         }
 
