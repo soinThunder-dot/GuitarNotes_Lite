@@ -36,9 +36,17 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
+      
+      - name: Rename APK with build number
+        run: |
+          BUILD_NUM=48
+          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/GuitarNotes_Lite_build${BUILD_NUM}.apk
+
+      - name: Create Release and Upload APK
+        uses: softprops/action-gh-release@v1
         with:
-          name: GuitarNotes_Lite-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          files: app/build/outputs/apk/debug/GuitarNotes_Lite_build*.apk
+          draft: false
+          prerelease: false
