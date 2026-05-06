@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity() {
         rootLayout.addView(staffView, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,   // 寬度填滿
             0,                                         // 高度 0（使用 weight）
-            5f  // weight = 5（給五線譜更大空間以顯示高音符）                        ))
+            7f  // weight = 7 （大幅增加以顯示更多五線譜空間）                        ))
 
         // --- 狀態文字（顯示「正在答第 x/4 題」）---
         statusLabel = TextView(this).apply {
@@ -103,7 +103,7 @@ class MainActivity : AppCompatActivity() {
         rootLayout.addView(fretboard, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             0,
-            1f  // weight = 1（縮小指板以給五線譜更多空間）                        ))
+            1f  // weight = 1 （縮小指板以給五線譜更多空間）                        ))
         // --- 反饋文字（顯示對/錯和提示）---
         feedbackLabel = TextView(this).apply {
             textSize = 13f
