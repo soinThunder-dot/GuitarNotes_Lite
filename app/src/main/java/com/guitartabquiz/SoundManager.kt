@@ -7,14 +7,10 @@
 //   app/src/main/res/raw/
 //
 // 【MP3 檔案命名規則】
-// 格式：s{string}_f{fret}.wav
-// 例如：
-//   s1_f0.wav  = 第 1 弦第 0 格（第 1 弦空弦，高音 E）
-//   s1_f5.wav  = 第 1 弦第 5 格（A 音）
-//   s6_f0.wav  = 第 6 弦第 0 格（第 6 弦空弦，低音 E）
-//
-// 【如果 MP3 不存在】
-// APP 不會崩潰，只會跳過播放並記錄到 Log
+    //  格式：g{guitar}_s{string}_f{fret}.wav  (其中 guitar = 1-8)// 例如：
+    //      g3_s1_f0.wav  = 吉他 3 第 1 弦第 0 格（第 1 弦空弦，高音 E）//   s1_f5.wav  = 第 1 弦第 5 格（A 音）
+    //      g5_s1_f5.wav  = 吉他 5 第 1 弦第 5 格（A 音）//
+    //      g8_s6_f0.wav  = 吉他 8 第 6 弦第 0 格（第 6 弦空弦，低音 E）// APP 不會崩潰，只會跳過播放並記錄到 Log
 // ===========================================================
 package com.guitartabquiz
 
@@ -49,10 +45,13 @@ class SoundManager(private val context: Context) {
      */
     fun play(resourceName: String) {
         try {
+        //  隨機選擇 1-8 把吉他
+        val randomGuitar = (1..8).random()  //  從 1 到 8 隨機選一個
+        val guitarResourceName = "g${randomGuitar}_$resourceName"  //  加上吉他編號
             // 步驟 1: 查找資源 ID
             // context.resources.getIdentifier() 會在 res/raw/ 目錄中找 resourceName.wav
             val resId = context.resources.getIdentifier(
-                resourceName,        // 例如 "s1_f5"
+                guitarResourceName,        // 例如 "s1_f5"
                 "raw",               // 資源類型：raw （res/raw/）
                 context.packageName  // APP 的套件名
             )
