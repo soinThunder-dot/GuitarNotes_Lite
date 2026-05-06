@@ -64,8 +64,8 @@ class StaffView @JvmOverloads constructor(
         val h = height.toFloat()
         canvas.drawRect(0f, 0f, w, h, bgPaint)
 
-        val staffLeft = 56f
-        val staffRight = w - 14f
+        val staffLeft = 0.5f
+        val staffRight = w - 0.5f
         val staffBottom = h * 0.75f  // 五線譜最底線（75% 位置，給上方留空間                val lineSpacing = h * 0.12f  // 線間距
         val lineSpacing = h * 0.10f  // 線間距 10%，讓五線譜更大        // 繪 5 條線
         for (i in 0..4) {
