@@ -64,11 +64,24 @@ class StaffView @JvmOverloads constructor(
         val h = height.toFloat()
         canvas.drawRect(0f, 0f, w, h, bgPaint)
 
-        val staffLeft = w * 0.05f  // 左邊界
-        val staffRight = w - w * 0.05f  // 右邊界
-        // 絕對擴展：基於當前 lineSpacing，往上延伸 65%，往下延伸 20%
+        // ======== MATCH ANSWER (GuitarTabView) WIDTH & SCALE HEIGHT ========
+        // ANSWER 繪製寬度：w * 0.94 (boardLeft=0.06, 繪製區 0.94)
+        // QUESTION 舊寬度：w * 0.90 (staffLeft=0.05, staffRight=0.95)
+        // 新寬度 = 0.94w，新高度 = 舊高度 * (0.94 / 0.90) = 舊高度 * 1.044
+        
+        val answerWidth = w * 0.94f  // 匹配 ANSWER (fretboard) 寬度
+        val staffLeft = w * 0.06f  // 左邊界，匹配 fretboard 的 boardLeft
+        val staffRight = staffLeft + answerWidth  // 右邊界 = 左 + ANSWER寬度
+        
+        // 舊 lineSpacing 基準：h * 0.055
+        // 按比例縮放：新高度 = 舊高度 / 舊寬度 * 新寬度
+        val oldWidthRatio = 0.90f  // 舊 QUESTION 寬度比例
+        val newWidthRatio = 0.94f  // 新 QUESTION 寬度比例
+        val scaleRatio = newWidthRatio / oldWidthRatio  // 1.044
+        
         val baseLineSpacing = h * 0.055f  // 基準線間距
-        val expandedLineSpacing = baseLineSpacing * 1.65f  // 往上擴展 65% (線間距變大)
+        val scaledLineSpacing = baseLineSpacing * scaleRatio  // 按比例放大
+        val expandedLineSpacing = scaledLineSpacing * 1.65f  // 再擴展 65%
         val lineSpacing = expandedLineSpacing
         val staffBottom = h * 0.98f  // 底線盡量往下（給上方更多空間）
         for (i in 0..4) {
