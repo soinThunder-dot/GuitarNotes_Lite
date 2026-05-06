@@ -70,7 +70,6 @@ class StaffView @JvmOverloads constructor(
         val staffBottom = h * 0.75f
         val lineSpacing = h * 0.10f  // 原始線間距
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
-        }
 
         // 繪高音譜號 𝄞
         clefPaint.textSize = lineSpacing * 5.2f
