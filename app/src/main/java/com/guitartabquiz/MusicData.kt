@@ -168,7 +168,7 @@ add(Note("${noteNames[i]}$octave", notated, notated - 12))                // 例
     // shuffled() = 把列表隨機打亂，回傳新列表（不修改原列表）
     // take(count) = 從打亂後的列表取前 count 個
     // --------------------------------------------------------
-    fun randomQuizNotes(count: Int = 4): List<Note> = ALL_NOTES.shuffled().take(count)
+    fun randomQuizNotes(count: Int = 8): List<Note> = ALL_NOTES.shuffled().take(count)
     // 每次呼叫都會從 29 個音符裡隨機選 4 個，確保每輪不重複且多樣化
 
     // --------------------------------------------------------
