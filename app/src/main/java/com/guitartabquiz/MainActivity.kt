@@ -74,12 +74,12 @@ class MainActivity : AppCompatActivity() {
         // --- 五線譜（單一 StaffView，顯示全部 8 個音符）---
         // 使用 layout weight = 2，佔據較少的高度
         staffView = StaffView(this)
-        staffView.scaleX = 1f  // 水平縮小到 50% is wrong
-        staffView.scaleY = 1f  // 垂直縮小到 50% is wrong
+        //staffView.scaleX = 0.5f  // 水平縮小到 50% is wrong???ERROR
+        //staffView.scaleY = 0.5f  // 垂直縮小到 50% is wrong???ERROE
         rootLayout.addView(staffView, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,   // 寬度填滿
             0,                                         // 高度 0（使用 weight）
-            3f  // weight = 3 （增加以顯示更多五線譜空間
+            2f  // weight = 2 （增加以顯示更多五線譜空間
                         ))
 
         // --- 狀態文字（顯示「正在答第 x/8 題」）---
@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
         rootLayout.addView(fretboard, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             0,
-            2f  // weight = 2 （減少以給五線譜更多空間）            
+            3f  // weight = 3 （減少以給五線譜更多空間）            
                         ))
         // --- 反饋文字（顯示對/錯和提示）---
         feedbackLabel = TextView(this).apply {
