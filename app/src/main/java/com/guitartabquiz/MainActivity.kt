@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var scoreBar: LinearLayout            // 分數欄：顯示得分和按鈕
     private lateinit var scoreTv: TextView                 // 分數文字：顯示得分
 
-    private val totalPerRound = 4                          // 每回合題數 = 4
+    private val totalPerRound = 8                          // 每回合題數 = 4 ####     TRY UPDATE?
     private var currentNotes: List<Note> = emptyList()    // 目前回合的 4 個音符
     private var currentIndex = 0                           // 目前正在答第幾題（0-based）
     private var score = 0                                  // 目前回合得分
@@ -74,8 +74,8 @@ class MainActivity : AppCompatActivity() {
         // --- 五線譜（單一 StaffView，顯示全部 4 個音符）---
         // 使用 layout weight = 2，佔據較少的高度
         staffView = StaffView(this)
-        staffView.scaleX = 0.5f  // 水平縮小到 50%
-        staffView.scaleY = 0.5f  // 垂直縮小到 50%
+        staffView.scaleX = 1f  // 水平縮小到 50% is wrong
+        staffView.scaleY = 1f  // 垂直縮小到 50% is wrong
         rootLayout.addView(staffView, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,   // 寬度填滿
             0,                                         // 高度 0（使用 weight）
