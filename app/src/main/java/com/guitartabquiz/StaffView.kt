@@ -66,8 +66,8 @@ class StaffView @JvmOverloads constructor(
         
         val staffLeft = 4f
         val staffRight = w - 4f  
-        val staffBottom = h * 0.75f
-        val lineSpacing = h * 0.8f  // 原始線間距
+        val staffBottom = h * 0.70f
+        val lineSpacing = h * 0.12f  // 原始線間距 ??ERROR??
 
         // 繪 5 條線
         for (i in 0..4) {
