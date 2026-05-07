@@ -3,12 +3,12 @@
 // 用途：主程式畫面 — 吉他音階測驗 APP（橫向螢幕）
 // 畫面佈局：
 //     標題列 [Title bar] → 不占太多高度
-//     五線譜 [StaffView] → 顯示 4 個音符，答題後依次變綠/紅
-//     狀態文字 [Status label] → 提示「正在答第 x/4 題」
+//     五線譜 [StaffView] → 顯示 8 個音符，答題後依次變綠/紅
+//     狀態文字 [Status label] → 提示「正在答第 x/8 題」
 //     吉他指板 [GuitarTabView] → 6 弦 x 24 格共 144 個可點擊格子
 //     反饋文字 [Feedback label] → 顯示對錯
 //     分數欄 + 下一回合按鈕 [Score bar + Next Round button]
-//           → 完成 4 題後才顯示
+//           → 完成 8 題後才顯示
 // ===========================================================
 package com.guitartabquiz
 
@@ -38,15 +38,15 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var soundManager: SoundManager       // 音效管理器：播放吉他音檔
     private lateinit var rootLayout: LinearLayout          // 根佈局：垂直排列所有元件
-    private lateinit var staffView: StaffView              // 五線譜：顯示 4 個音符
+    private lateinit var staffView: StaffView              // 五線譜：顯示 8 個音符
     private lateinit var statusLabel: TextView             // 狀態文字：顯示「正在答第幾題」
     private lateinit var fretboard: GuitarTabView          // 吉他指板：可點擊的 6x24 格
     private lateinit var feedbackLabel: TextView           // 反饋文字：對/錯提示
     private lateinit var scoreBar: LinearLayout            // 分數欄：顯示得分和按鈕
     private lateinit var scoreTv: TextView                 // 分數文字：顯示得分
 
-    private val totalPerRound = 8                          // 每回合題數 = 4 ####     TRY UPDATE?
-    private var currentNotes: List<Note> = emptyList()    // 目前回合的 4 個音符
+    private val totalPerRound = 8                          // 每回合題數 = 8 ####     TRY UPDATE?
+    private var currentNotes: List<Note> = emptyList()    // 目前回合的 8 個音符
     private var currentIndex = 0                           // 目前正在答第幾題（0-based）
     private var score = 0                                  // 目前回合得分
 
@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)        // 呼叫父類別的 onCreate
         soundManager = SoundManager(this)         // 初始化音效管理器
         buildLayout()                              // 建立畫面佈局
-        startNewRound()                            // 開始第一回合（抽 4 個音符）
+        startNewRound()                            // 開始第一回合（抽 8 個音符）
     }
 
     // ---------------------------------------------------------
@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         }
         setContentView(rootLayout)  // 將根佈局設為 Activity 的畫面
 
-        // --- 五線譜（單一 StaffView，顯示全部 4 個音符）---
+        // --- 五線譜（單一 StaffView，顯示全部 8 個音符）---
         // 使用 layout weight = 2，佔據較少的高度
         staffView = StaffView(this)
         staffView.scaleX = 1f  // 水平縮小到 50% is wrong
@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
             3f  // weight = 3 （增加以顯示更多五線譜空間
                         ))
 
-        // --- 狀態文字（顯示「正在答第 x/4 題」）---
+        // --- 狀態文字（顯示「正在答第 x/8 題」）---
         statusLabel = TextView(this).apply {
             textSize = 13f
             setTextColor(Color.parseColor("#FFD700"))  // 金色
@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity() {
         ))
 
         // --- 分數欄（包含分數文字 + 下一回合按鈕）---
-        // 預設隱藏（visibility = View.GONE），4 題答完才顯示
+        // 預設隱藏（visibility = View.GONE），8 題答完才顯示
         scoreBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
@@ -154,15 +154,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ---------------------------------------------------------
-    // [開始新回合] startNewRound() — 重置並抽 4 個音符
+    // [開始新回合] startNewRound() — 重置並抽 8 個音符
     // ---------------------------------------------------------
     private fun startNewRound() {
-        // 1. 從 MusicData 抽 4 個隨機音符（E3-E7 範圍）
+        // 1. 從 MusicData 抽 8 個隨機音符（E3-E7 範圍）
         currentNotes = MusicData.randomQuizNotes(totalPerRound)
         currentIndex = 0  // 重置為第 0 題
         score = 0         // 重置得分
 
-        // 2. 將 4 個音符顯示在五線譜上（全部預設為金色）
+        // 2. 將 8 個音符顯示在五線譜上（全部預設為金色）
         staffView.notes = currentNotes
 
         // 3. 隱藏分數欄
@@ -185,7 +185,7 @@ class MainActivity : AppCompatActivity() {
         if (currentIndex >= totalPerRound) return
 
         val note = currentNotes[currentIndex]
-        // 顯示「Note 1 / 4 — Find: C4」
+        // 顯示「Note 1 / 8 — Find: C4」
         statusLabel.text = "Note ${currentIndex + 1} / $totalPerRound — Find: ${note.name}"
 
         // 清空反饋文字
