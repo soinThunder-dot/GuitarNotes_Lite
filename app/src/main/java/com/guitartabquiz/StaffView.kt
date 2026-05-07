@@ -64,11 +64,30 @@ class StaffView @JvmOverloads constructor(
         val h = height.toFloat()
         canvas.drawRect(0f, 0f, w, h, bgPaint)
         
-        val staffLeft = 4f
-        val staffRight = w - 4f  
-        val staffBottom = h * 0.60f      // 往上移一點
-        val lineSpacing = h * 0.08f      // 行距變細
+        //val staffLeft = 4f
+        //val staffRight = w - 4f  
+        //val staffBottom = h * 0.60f      // 往上移一點
+        //val lineSpacing = h * 0.08f      // 行距變細
 
+        val staffLeft = 4f
+        val staffRight = w - 4f
+
+        // ==== 新：為 E3(-7) ~ E7(+21) 設計可用高度 ====
+        val topMargin    = h * 0.12f   // 上方保留 12%
+        val bottomMargin = h * 0.20f   // 下方保留 20%
+
+        val minStep = -7   // E3
+        val maxStep = 21   // E7
+        val stepRange = maxStep - minStep    // 28 steps
+
+        val usableHeight = h - topMargin - bottomMargin
+        val halfSp       = usableHeight / stepRange
+        val lineSpacing  = halfSp * 2f
+
+        // 讓 E3 靠近 bottomMargin：E4(step=0) 在上面 7 個 step
+        val staffBottom = bottomMargin + (0 - minStep) * halfSp
+        // ==== 到這裡為止，下面你的原來程式可以照用 ====
+        
         // 繪 5 條線
         for (i in 0..4) {
             val y = staffBottom - i * lineSpacing
