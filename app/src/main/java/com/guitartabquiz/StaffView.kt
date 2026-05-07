@@ -8,7 +8,7 @@ import android.view.View
 // 謎面狀態：預設（金色）、正確（綠色）、錯誤（紅色）
 enum class NoteState { DEFAULT, CORRECT, WRONG }
 
-// 五線譜 View — 繪製高音譜，顯示最多 4 個音符
+// 五線譜 View — 繪製高音譜，顯示最多 8 個音符
 class StaffView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
@@ -72,7 +72,7 @@ class StaffView @JvmOverloads constructor(
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
 
         // 繪高音譜號 𝄞
-        clefPaint.textSize = lineSpacing * 5.2f
+        clefPaint.textSize = lineSpacing * 2.2f
         canvas.drawText("\uD834\uDD1E", staffLeft - 12f, staffBottom + lineSpacing * 0.75f, clefPaint)
 
         if (notes.isEmpty()) return
