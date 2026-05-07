@@ -106,7 +106,7 @@ class StaffView @JvmOverloads constructor(
 
         notes.forEachIndexed { idx, note ->
             val step = trebleStep(note)
-            val halfSp = lineSpacing / 2f
+            //val halfSp = lineSpacing / 2f    //然後把你後面 val halfSp = lineSpacing / 2f 那行刪掉或改成用這裡算好的 halfSp，避免重複定義。
             val noteY = staffBottom - step * halfSp
             val noteX = if (notes.size == 1) noteStartX + noteAreaW / 2f else noteStartX + idx * spacing
             val r = lineSpacing * 0.40f
