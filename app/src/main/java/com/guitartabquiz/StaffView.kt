@@ -66,8 +66,8 @@ class StaffView @JvmOverloads constructor(
         
         val staffLeft = 4f
         val staffRight = w - 4f  
-        val staffBottom = h * 0.70f
-        val lineSpacing = h * 0.12f  // 原始線間距 ??ERROR??
+        val staffBottom = h * 0.60f      // 往上移一點
+        val lineSpacing = h * 0.08f      // 行距變細
 
         // 繪 5 條線
         for (i in 0..4) {
@@ -145,7 +145,7 @@ class StaffView @JvmOverloads constructor(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         setMeasuredDimension(
             resolveSize(800, widthMeasureSpec),
-            resolveSize(150, heightMeasureSpec)
+            resolveSize(240, heightMeasureSpec) //然後把 onMeasure 的高度改大一點,但足夠把 E3–E7 都擠進 
         )
     }
 }
