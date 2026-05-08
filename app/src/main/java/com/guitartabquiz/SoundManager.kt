@@ -15,7 +15,9 @@
 package com.guitartabquiz
 
 import android.content.Context
-import android.media.MediaPlayer
+//import android.media.MediaPlayer
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.util.Log
 
 /**
@@ -29,8 +31,19 @@ import android.util.Log
 class SoundManager(private val context: Context) {
 
     // 目前正在播放的 MediaPlayer 物件（可能為 null）
-    private var currentPlayer: MediaPlayer? = null
-
+    //private var currentPlayer: MediaPlayer? = null
+    private val soundPool: SoundPool = SoundPool.Builder()
+        .setMaxStreams(3)  // 最多同時播 3 個音（避免疊太多）
+        .setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+        )
+        .build()
+    // 快取已載入的 soundId，避免每次都重新 load
+    private val soundCache = mutableMapOf<Int, Int>()  // resId -> soundId
+        
     /**
      * 播放指定的音檔
      * 
@@ -58,20 +71,32 @@ class SoundManager(private val context: Context) {
             
             // 步驟 2: 如果 resId == 0 代表找不到檔案
             if (resId == 0) {
-                Log.d("SoundManager", "MP3 not found: $resourceName — skipping")
+                Log.d("SoundManager", "WAV not found: $resourceName — skipping")
                 return  // 跳過，不播放
             }
 
             // 步驟 3: 停止上一個音檔
-            stopCurrent()
+            //stopCurrent()
 
             // 步驟 4: 創建新的 MediaPlayer 並開始播放
-            currentPlayer = MediaPlayer.create(context, resId)?.apply {
+            //currentPlayer = MediaPlayer.create(context, resId)?.apply {
                 // 播放完成後的監聽器：釋放資源
-                setOnCompletionListener { release() }
+            //    setOnCompletionListener { release() }
                 // 開始播放
-                start()
+            //   start()
+            //}
+
+            
+
+            // 如果已經 load 過就直接播，否則先 load 再播
+            val soundId = soundCache.getOrPut(resId) {
+                soundPool.load(context, resId, 1)
             }
+
+            // SoundPool.load 是非同步，load 完才能 play
+            // 簡單做法：直接 play，load 期間會靜音（通常 < 100ms，第二次點擊就正常了）
+            soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
+
         } catch (e: Exception) {
             // 如果發生錯誤，記錄到 Log 但不崩潰
             Log.e("SoundManager", "Error playing $resourceName: ${e.message}")
@@ -81,18 +106,20 @@ class SoundManager(private val context: Context) {
     /**
      * 停止目前正在播放的音檔
      */
-    fun stopCurrent() {
-        currentPlayer?.apply {
-            if (isPlaying) stop()  // 如果正在播放，先停止
-            release()               // 釋放 MediaPlayer 資源
-        }
-        currentPlayer = null
-    }
+    //fun stopCurrent() {
+    //    currentPlayer?.apply {
+    //        if (isPlaying) stop()  // 如果正在播放，先停止
+    //        release()               // 釋放 MediaPlayer 資源
+    //    }
+    //    currentPlayer = null
+    //}
 
     /**
      * 釋放所有資源（當 Activity 銷毀時呼叫）
      */
     fun release() {
-        stopCurrent()
+        soundPool.release()
+        soundCache.clear()
+        //stopCurrent()
     }
 }
