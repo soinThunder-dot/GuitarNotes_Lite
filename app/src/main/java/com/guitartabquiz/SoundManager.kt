@@ -58,8 +58,8 @@ class SoundManager(private val context: Context) {
      */
     fun play(resourceName: String) {
         try {
-        //  隨機選擇 1-8 把吉他
-        val randomGuitar = (1..2).random()  //  從 1 到 8 隨機選一個
+        //  隨機選擇 1-2 把吉他
+        val randomGuitar = (1..2).random()  //  從 1 到 2 隨機選一個
         val guitarResourceName = "g${randomGuitar}_$resourceName"  //  加上吉他編號
             // 步驟 1: 查找資源 ID
             // context.resources.getIdentifier() 會在 res/raw/ 目錄中找 resourceName.wav
@@ -71,7 +71,7 @@ class SoundManager(private val context: Context) {
             
             // 步驟 2: 如果 resId == 0 代表找不到檔案
             if (resId == 0) {
-                Log.d("SoundManager", "WAV not found: $resourceName — skipping")
+                Log.d("SoundManager", "WAV not found: $guitarResourceName — skipping")
                 return  // 跳過，不播放
             }
 
