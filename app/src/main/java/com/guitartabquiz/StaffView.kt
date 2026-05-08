@@ -214,12 +214,13 @@ class StaffView @JvmOverloads constructor(
             canvas.drawLine(noteX + r, noteY, noteX + r, noteY - lineSpacing * 2.8f, stemPaint)
 
             // 繪音名
-            labelPaint.textSize = lineSpacing * 0.52f
+            labelPaint.textSize = lineSpacing * 1f
             labelPaint.color = noteColor
             canvas.drawText(note.name, noteX, staffBottom + lineSpacing * 1.7f, labelPaint)
 
             // 繪對錯記號
-            labelPaint.textSize = lineSpacing * 1.04f  // 音符名稱文字大小 (2倍)                val badge = if (state == NoteState.CORRECT) "\u2713" else "\u2717"
+            if (state != NoteState.DEFAULT) {
+                val badge = if (state == NoteState.CORRECT) "\u2713" else "\u2717"
                 val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                     color = noteColor; textSize = lineSpacing * 0.9f; textAlign = Paint.Align.CENTER
                     typeface = Typeface.DEFAULT_BOLD
