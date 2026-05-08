@@ -46,9 +46,9 @@ class SoundManager(private val context: Context) {
      */
     fun play(resourceName: String) {
         try {
-        //  隨機選擇 1-2 把吉他
-        val randomGuitar = (1..2).random()  //  從 1 到 2 隨機選一個
-        val guitarResourceName = "g${randomGuitar}_$resourceName"  //  加上吉他編號
+            //  隨機選擇 1-2 把吉他
+            val randomGuitar = (1..2).random()  //  從 1 到 2 隨機選一個
+            val guitarResourceName = "g${randomGuitar}_$resourceName"  //  加上吉他編號
             // 步驟 1: 查找資源 ID
             // context.resources.getIdentifier() 會在 res/raw/ 目錄中找 resourceName.wav
             val resId = context.resources.getIdentifier(
@@ -60,44 +60,100 @@ class SoundManager(private val context: Context) {
             
             // 步驟 2: 如果 resId == 0 代表找不到檔案
             if (resId == 0) {
-                Log.d("SoundManager", "WAV not found: $guitarResourceName  — skipping")
-                return  // 跳過，不播放
+                Log.d("SoundManager", "WAV not found: $guitarResourceName  — fallback")
+                playFallback()
+                return
             }
 
-            // 步驟 3: 停止上一個音檔
-            //stopCurrent()
-            // 否則換一個檔案：先釋放舊的，再 create 新的
-            currentPlayer?.release()
+            // 3. 如果是同一個檔，直接從頭播（最穩）
+            if (currentPlayer != null && currentResId == resId) {
+                currentPlayer?.let { mp ->
+                    try {
+                        mp.seekTo(0)
+                        mp.start()
+                        Log.d("SoundManager", "replay existing player resId=$resId")
+                        return
+                    } catch (e: Exception) {
+                        Log.e("SoundManager", "replay failed, will recreate", e)
+                        // 繼續往下，重新 create
+                    }
+                }
+            }
 
-            // 步驟 4: 創建新的 MediaPlayer 並開始播放
-            currentPlayer = MediaPlayer.create(context, resId)?.apply {
-                // 播放完成後的監聽器：釋放資源
+            // 4. 新檔案：釋放舊 player
+            currentPlayer?.release()
+            currentPlayer = null
+            currentResId = null
+
+            // 5. 創建新的 MediaPlayer
+            val mp = MediaPlayer.create(context, resId)
+            if (mp == null) {
+                Log.e("SoundManager", "MediaPlayer.create returned null for $guitarResourceName")
+                playFallback()
+                return
+            }
+
+            currentPlayer = mp
+            currentResId = resId
+
+            // 當播完，不用馬上 release，保留給下一次重播
+            mp.setOnCompletionListener {
+                // 如果你真的想播完就釋放，也可以在這裡 call release()
+                // 但為了重播同一音效順，這裡先不 release
+            }
+
+            try {
+                mp.start()
+                Log.d("SoundManager", "start() ok for resId=$resId")
+            } catch (e: IllegalStateException) {
+                Log.e("SoundManager", "start() failed, try prepare & start", e)
+                try {
+                    mp.reset()
+                    mp.setOnPreparedListener { it.start() }
+                    mp.setDataSource(context.resources.openRawResourceFd(resId).fileDescriptor)
+                    mp.prepareAsync()
+                } catch (e2: Exception) {
+                    Log.e("SoundManager", "prepareAsync fallback failed", e2)
+                    playFallback()
+                }
+            }
+
+        } catch (e: Exception) {
+            Log.e("SoundManager", "Error playing $resourceName: ${e.message}", e)
+            playFallback()
+        }
+    }
+
+    // 簡單 fallback：給你一顆共用 click 音，用來保證耳朵有東西
+    private fun playFallback() {
+        try {
+            val resId = context.resources.getIdentifier(
+                "click_fallback",
+                "raw",
+                context.packageName
+            )
+            if (resId == 0) {
+                Log.d("SoundManager", "No fallback sound defined (click_fallback.wav)")
+                return
+            }
+            MediaPlayer.create(context, resId)?.apply {
                 setOnCompletionListener { release() }
-                // 開始播放
                 start()
             }
-            currentResId = resId
-            
         } catch (e: Exception) {
-            // 如果發生錯誤，記錄到 Log 但不崩潰
-            Log.e("SoundManager", "Error playing $resourceName: ${e.message}", e)
+            Log.e("SoundManager", "Error in fallback sound: ${e.message}", e)
         }
     }
 
-    /**
-     * 停止目前正在播放的音檔
-     */
     fun stopCurrent() {
         currentPlayer?.apply {
-            if (isPlaying) stop()  // 如果正在播放，先停止
-            release()               // 釋放 MediaPlayer 資源
+            if (isPlaying) stop()
+            release()
         }
         currentPlayer = null
+        currentResId = null
     }
 
-    /**
-     * 釋放所有資源（當 Activity 銷毀時呼叫）
-     */
     fun release() {
         currentPlayer?.release()
         currentPlayer = null
