@@ -234,6 +234,62 @@ class StaffView @JvmOverloads constructor(
         setMeasuredDimension(
             resolveSize(800, widthMeasureSpec),
 
+
+                    // ==== 10-7. Draw lower octave (copy all notes, 1 octave lower) ====
+        notes.forEachIndexed { idx, note ->
+            // Lower octave: step - 7 (7 diatonic steps = 1 octave)
+            val step = trebleStep(note) - 7
+            val noteY = staffBottom - step * halfSp
+            val noteX = if (notes.size == 1) {
+                noteStartX + noteAreaW / 2f
+            } else {
+                noteStartX + idx * spacing
+            }
+            val r = lineSpacing * 0.40f
+            val state = noteStates.getOrElse(idx) { NoteState.DEFAULT }
+            val noteColor = when (state) {
+                NoteState.CORRECT -> colorCorrect
+                NoteState.WRONG -> colorWrong
+                NoteState.DEFAULT -> colorDefault
+            }
+            // Note head paint
+            val notePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = noteColor; style = Paint.Style.FILL
+            }
+            // Stem paint
+            val stemPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = noteColor; style = Paint.Style.STROKE; strokeWidth = 1.8f
+            }
+            // Ledger lines for lower notes
+            if (step < 0) {
+                var s = -2
+                while (s >= step) {
+                    val ly = staffBottom - s * halfSp
+                    canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
+                    s -= 2
+                }
+            }
+            // Draw note head
+            canvas.drawOval(noteX - r * 1.1f, noteY - r * 0.75f, noteX + r * 1.1f, noteY + r * 0.75f, notePaint)
+            // Draw stem
+            canvas.drawLine(noteX + r, noteY, noteX + r, noteY - lineSpacing * 2.8f, stemPaint)
+            // Draw note label (with -1 octave in name display)
+            val lowerNote = note.copy(midiActual = note.midiActual - 12)
+            labelPaint.textSize = lineSpacing * 1f
+            labelPaint.color = noteColor
+            canvas.drawText(lowerNote.name, noteX, staffBottom + lineSpacing * 1.7f, labelPaint)
+            // Draw correct/wrong badge
+            if (state != NoteState.DEFAULT) {
+                val badge = if (state == NoteState.CORRECT) "\u2713" else "\u2717"
+                val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = noteColor
+                    textSize = lineSpacing * 0.9f
+                    textAlign = Paint.Align.CENTER
+                    typeface = Typeface.DEFAULT_BOLD
+                }
+                canvas.drawText(badge, noteX, noteY - lineSpacing * 3.2f, badgePaint)
+            }
+        }
                     // Draw text at bottom-right: "piano" (blue) + "< tab >" (white) + "guitar" (red)
         val textY = h - 20f
         
