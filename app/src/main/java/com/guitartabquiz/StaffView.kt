@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import android.view.MotionEvent
 
 // 謎面狀態：預設（金色）、正確（綠色）、錯誤（紅色）
 enum class NoteState { DEFAULT, CORRECT, WRONG }
@@ -26,6 +27,16 @@ class StaffView @JvmOverloads constructor(
     private val clefPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#AAAAAA"); textAlign = Paint.Align.LEFT
     }
+
+        private val togglePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+    }
+    private val toggleTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE; textSize = 28f; textAlign = Paint.Align.RIGHT
+    }
+    
+    // Toggle state: true = Piano (red), false = Guitar (blue)
+    private var isPianoMode = false
     private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#1A1A2E"); textAlign = Paint.Align.CENTER
         typeface = Typeface.DEFAULT_BOLD
@@ -122,7 +133,8 @@ class StaffView @JvmOverloads constructor(
     
         // ==== 7. 畫高音譜號（𝄞 treble clef）====
         // 用 lineSpacing 來決定 clef 大小，確保隨著 staff 等比例縮放
-        clefPaint.textSize = lineSpacing * 2.2f
+        
+        = lineSpacing * 2.2f
         // Y 位置：略低於 staffBottom（讓譜號尾巴伸到五線下方，看起來比較像譜面）
         canvas.drawText("\uD834\uDD1E", staffLeft - 12f, staffBottom + lineSpacing * 0.75f, clefPaint)
     
@@ -159,7 +171,11 @@ class StaffView @JvmOverloads constructor(
                 noteStartX + noteAreaW / 2f
             } else {
                 noteStartX + idx * spacing
-            }
+        
+
+
+
+                
     
             // 10-4. 音符頭半徑（與 lineSpacing 成比例）
             val r = lineSpacing * 0.40f
@@ -176,6 +192,20 @@ class StaffView @JvmOverloads constructor(
             val notePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = noteColor
                 style = Paint.Style.FILL
+
+                        // ==== 11. 繪製 Toggle Button （右下角）====
+        val buttonW = 80f
+        val buttonH = 40f
+        val buttonX = w - buttonW - 20f
+        val buttonY = h - buttonH - 10f
+        
+        // Button background: red (Piano) / blue (Guitar)
+        togglePaint.color = if (isPianoMode) Color.RED else Color.BLUE
+        canvas.drawRect(buttonX, buttonY, buttonX + buttonW, buttonY + buttonH, togglePaint)
+        
+        // White text on left: "piano <tab> guitar"
+        val labelText = "piano    guitar"
+        canvas.drawText(labelText, buttonX - 10f, buttonY + buttonH / 2 + 10f, toggleTextPaint)
             }
     
             // 10-7. 建立畫音符尾巴（stem）的畫筆（描邊線）
@@ -235,5 +265,25 @@ class StaffView @JvmOverloads constructor(
             resolveSize(800, widthMeasureSpec),
             resolveSize(240, heightMeasureSpec) //然後把 onMeasure 的高度改大一點,但足夠把 E3–E7 都擠進 
         )
+
+            override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_DOWN) {
+            val w = width.toFloat()
+            val h = height.toFloat()
+            val buttonW = 80f
+            val buttonH = 40f
+            val buttonX = w - buttonW - 20f
+            val buttonY = h - buttonH - 10f
+            
+            // 檢查是否點擊在 button 內
+            if (event.x >= buttonX && event.x <= buttonX + buttonW &&
+                event.y >= buttonY && event.y <= buttonY + buttonH) {
+                isPianoMode = !isPianoMode  // Toggle mode
+                invalidate()  // Redraw
+                return true
+            }
+        }
+        return super.onTouchEvent(event)
+    }
     }
 }
