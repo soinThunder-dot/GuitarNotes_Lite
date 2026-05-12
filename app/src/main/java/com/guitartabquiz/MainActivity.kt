@@ -229,27 +229,21 @@ class MainActivity : AppCompatActivity() {
         // 7. 將五線譜上的音符標記為對/錯
         staffView.setNoteState(currentIndex, if (isCorrect) NoteState.CORRECT else NoteState.WRONG)
 
-
-        // 8. 播放音效（播放正確答案的音）
-        val tp = if (isCorrect) tapped else (correctTabs.minByOrNull { it.fret } ?: tapped)
-        val soundDebug = try {
-            soundManager.play(tp.resourceName())
-        } catch (e: Exception) {
-            "💥 ERROR: ${e.message}"
-        }
-        //soundManager.play(tp.resourceName())
-        
-        // 9. 顯示反饋文字
+        // 8. 顯示反饋文字
         if (isCorrect) {
             feedbackLabel.text = "\u2713 Correct! ${note.name} — string $string, fret $fret"
             feedbackLabel.setTextColor(Color.parseColor("#4CAF50"))  // 綠色
         } else {
             val hint = correctTabs.minByOrNull { it.fret } ?: correctTabs.first()
-            feedbackLabel.text = "\u2717 Wrong. ${note.name} — e.g. string ${hint.string}, fret ${hint.fret}\n$soundDebug"
+            feedbackLabel.text = "\u2717 Wrong. ${note.name} — e.g. string ${hint.string}, fret ${hint.fret}"
             feedbackLabel.setTextColor(Color.parseColor("#F44336"))  // 紅色
         }
 
-        
+        // 9. 播放音效（播放正確答案的音）
+        try {
+            val tp = if (isCorrect) tapped else (correctTabs.minByOrNull { it.fret } ?: tapped)
+            soundManager.play(tp.resourceName())
+        } catch (_: Exception) {}
 
         // 10. 移動到下一題
         currentIndex++
