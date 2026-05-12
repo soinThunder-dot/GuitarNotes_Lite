@@ -235,15 +235,15 @@ class MainActivity : AppCompatActivity() {
             currentIndex, 
             if (isCorrect) NoteState.CORRECT else NoteState.WRONG)
         // 8. 這一 click 要用哪個 TabPosition 來「播音 + 顯示 wav 名」
-        val playPos = if (isCorrect) tapped else (correctTabs.minByOrNull { it.fret } ?: tapped)
+        //val playPos = if (isCorrect) tapped else (correctTabs.minByOrNull { it.fret } ?: tapped)
         
         // 8. 播放音效（播放正確答案的音）
         // 播放音效，拿到 debug 字串
         //val tp = if (isCorrect) tapped else (correctTabs.minByOrNull { it.fret } ?: tapped)
-        val wavName = "g${soundManager.currentGuitar()}_${playPos.resourceName()}"//組出使用的 wav，方便 debug例如 g2_s1_f15
+        val wavName = "g${soundManager.currentGuitar()}_${tapped.resourceName()}"//組出使用的 wav，方便 debug例如 g2_s1_f15
         
         try {
-            soundManager.play(playPos.resourceName())
+            soundManager.play(tapped.resourceName())
         } catch (_: Exception) {}
         
         // 9. 顯示反饋文字
