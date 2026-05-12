@@ -134,7 +134,18 @@ class StaffView @JvmOverloads constructor(
         // 用 lineSpacing 來決定 clef 大小，確保隨著 staff 等比例縮放
         clefPaint.textSize = lineSpacing * 2.2f
         // Y 位置：略低於 staffBottom（讓譜號尾巴伸到五線下方，看起來比較像譜面）
-        canvas.drawText("\uD834\uDD1E", staffLeft - 12f, staffBottom + lineSpacing * 0.75f, clefPaint)
+        canvas.drawText("\uD834\uDD1E", sta
+
+        // ==== 7b. 畫低音譜號 + 低音五線 (bass clef) ====
+        val bassBottom = staffBottom + lineSpacing * 10f  // 低音譜比高音譜低10個線距
+        // 畫低音五線（5條）
+        for (i in 0..4) {
+            val y = bassBottom - i * lineSpacing
+            canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
+        }
+        // 畫低音譜號 𝄢
+        clefPaint.textSize = lineSpacing * 1.6f
+        canvas.drawText("\uD834\uDD22", staffLeft - 8f, bassBottom - lineSpacing * 1.5f, clefPaint)ffLeft - 12f, staffBottom + lineSpacing * 0.75f, clefPaint)
 
         // ==== 8. 如果沒有音符就結束 ====
         if (notes.isEmpty()) return
@@ -161,7 +172,9 @@ class StaffView @JvmOverloads constructor(
             val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
 
             // 10-2. 把 step 轉成 Y 座標（上面已經算好 halfSp）
-            val noteY = staffBottom - step * halfSp
+                        // 10-2. 把 step 轉成 Y 座標（高音譜或低音譜）
+            val currentStaffBottom = if (note.midiActual >= 60) staffBottom else bassBottom
+            val noteY = currentStaffBottom - step * halfSp
 
             // 10-3. 這顆音的 X 座標：
             //   - 只有 1 顆：noteStartX + noteAreaW / 2 （置中）
@@ -204,22 +217,22 @@ class StaffView @JvmOverloads constructor(
             if (step < 0) {
                 var s = -2
                 while (s >= step) {
-                    val ly = staffBottom - s * halfSp
+                                        val ly = currentStaffBottom - s * halfSp
                     canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
                     s -= 2
                 }
             }
             if (step > 8) {
                 var s = 10
-                while (s <= step) {
-                    val ly = staffBottom - s * halfSp
+                while (s <= step) currentStaffBottom
+                                        val ly = currentStaffBottom - s * halfSp
                     canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
                     s += 2
                 }
             }
 
             // 繪符頭
-            canvas.drawOval(noteX - r * 1.1f, noteY - r * 0.75f, noteX + r * 1.1f, noteY + r * 0.75f, notePaint)
+            canvas.drawOval(noteX currentStaffBottom r * 1.1f, noteY - r * 0.75f, noteX + r * 1.1f, noteY + r * 0.75f, notePaint)
 
             // 繪符尾
             canvas.drawLine(noteX + r, noteY, noteX + r, noteY - lineSpacing * 2.8f, stemPaint)
@@ -227,24 +240,4 @@ class StaffView @JvmOverloads constructor(
             // 繪音名
             labelPaint.textSize = lineSpacing * 1f
             labelPaint.color = noteColor
-            canvas.drawText(note.name, noteX, staffBottom + lineSpacing * 1.7f, labelPaint)
-
-            // 繪對錯記號
-            if (state != NoteState.DEFAULT) {
-                val badge = if (state == NoteState.CORRECT) "\u2713" else "\u2717"
-                val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = noteColor; textSize = lineSpacing * 0.9f; textAlign = Paint.Align.CENTER
-                    typeface = Typeface.DEFAULT_BOLD
-                }
-                canvas.drawText(badge, noteX, noteY - lineSpacing * 3.2f, badgePaint)
-            }
-        }
-    }
-
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        setMeasuredDimension(
-            resolveSize(800, widthMeasureSpec),
-            resolveSize(240, heightMeasureSpec) //然後把 onMeasure 的高度改大一點,但足夠把 E3–E7 都擠進
-        )
-    }
-}
+            canvas.drawText(note.name, noteX, currentStaffBottom + lineSpacing * 1.7f, labelPaint)
