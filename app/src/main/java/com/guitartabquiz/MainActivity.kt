@@ -231,7 +231,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 7. 將五線譜上的音符標記為對/錯
-        staffView.setNoteState(currentIndex, if (isCorrect) NoteState.CORRECT else NoteState.WRONG)
+        staffView.setNoteState(
+            currentIndex, 
+            if (isCorrect) NoteState.CORRECT else NoteState.WRONG)
 
         
         // 8. 播放音效（播放正確答案的音）
@@ -249,7 +251,7 @@ class MainActivity : AppCompatActivity() {
             feedbackLabel.setTextColor(Color.parseColor("#4CAF50"))  // 綠色
         } else {
             val hint = correctTabs.minByOrNull { it.fret } ?: correctTabs.first()
-            feedbackLabel.text = "\u2717 Wrong. ${note.name} — e.g. string ${hint.string}, fret ${hint.fret}\n$wavname"
+            feedbackLabel.text = "\u2717 Wrong. ${note.name} — e.g. string ${hint.string}, fret ${hint.fret}\n$wavName"
             feedbackLabel.setTextColor(Color.parseColor("#F44336"))  // 紅色
         }
 
