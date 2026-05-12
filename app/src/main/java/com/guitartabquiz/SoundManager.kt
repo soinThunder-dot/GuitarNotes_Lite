@@ -94,7 +94,7 @@ class SoundManager(private val context: Context) {
             // 5. 創建新的 MediaPlayer
             val mp = MediaPlayer.create(context, resId)
             if (mp == null) {
-                Log.e("SoundManager", "Error playing $resourceName: ${e.message}", e)
+                Log.e("SoundManager", "MediaPlayer.create returned null for $guitarResourceName")
                 playFallback()
                 return
             }
