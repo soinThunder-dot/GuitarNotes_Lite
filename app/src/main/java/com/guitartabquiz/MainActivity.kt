@@ -157,6 +157,10 @@ class MainActivity : AppCompatActivity() {
     // [開始新回合] startNewRound() — 重置並抽 8 個音符
     // ---------------------------------------------------------
     private fun startNewRound() {
+        // 0.先決定這一 round 用哪一把吉他
+        val randGuitar = (1..2).random()
+        soundManager.setGuitar(randGuitar)
+        
         // 1. 從 MusicData 抽 8 個隨機音符（E3-E7 範圍）
         currentNotes = MusicData.randomQuizNotes(totalPerRound)
         currentIndex = 0  // 重置為第 0 題
