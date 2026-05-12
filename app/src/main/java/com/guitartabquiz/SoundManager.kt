@@ -28,6 +28,10 @@ import android.util.Log
  */
 class SoundManager(private val context: Context) {
 
+    private var lockedGuitar: Int = 1   // 預設第 2 把
+    fun setGuitar(guitar: Int) {
+        lockedGuitar = guitar
+    }
     // 目前正在播放的 MediaPlayer 物件（可能為 null）
     private var currentPlayer: MediaPlayer? = null
     private var currentResId: Int? = null
@@ -47,8 +51,8 @@ class SoundManager(private val context: Context) {
     fun play(resourceName: String) {
         try {
             //  隨機選擇 1-2 把吉他
-            val randomGuitar = (1..2).random()  //  從 1 到 2 隨機選一個
-            val guitarResourceName = "g${randomGuitar}_$resourceName"  //  加上吉他編號
+            //val randomGuitar = (1..2).random()  //  從 1 到 2 隨機選一個
+            val guitarResourceName = "g${lockedGuitar}_$resourceName"//  加上吉他編號
             // 步驟 1: 查找資源 ID
             // context.resources.getIdentifier() 會在 res/raw/ 目錄中找 resourceName.wav
             val resId = context.resources.getIdentifier(
@@ -88,7 +92,7 @@ class SoundManager(private val context: Context) {
             // 5. 創建新的 MediaPlayer
             val mp = MediaPlayer.create(context, resId)
             if (mp == null) {
-                Log.e("SoundManager", "MediaPlayer.create returned null for $guitarResourceName")
+                Log.e("SoundManager", "Error playing $resourceName: ${e.message}", e)
                 playFallback()
                 return
             }
