@@ -247,7 +247,7 @@ class MainActivity : AppCompatActivity() {
         
         // 9. 顯示反饋文字
         if (isCorrect) {
-            feedbackLabel.text = "\u2713 Correct! ${note.name} — string $string, fret $fret\n$wavName""
+            feedbackLabel.text = "\u2713 Correct! ${note.name} — string $string, fret $fret\n$wavName"
             feedbackLabel.setTextColor(Color.parseColor("#4CAF50"))  // 綠色
         } else {
             val hint = correctTabs.minByOrNull { it.fret } ?: correctTabs.first()
