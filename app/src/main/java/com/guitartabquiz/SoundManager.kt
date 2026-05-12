@@ -32,6 +32,8 @@ class SoundManager(private val context: Context) {
     fun setGuitar(guitar: Int) {
         lockedGuitar = guitar
     }
+    fun currentGuitar(): Int = lockedGuitar
+
     // 目前正在播放的 MediaPlayer 物件（可能為 null）
     private var currentPlayer: MediaPlayer? = null
     private var currentResId: Int? = null
