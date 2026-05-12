@@ -237,18 +237,21 @@ class MainActivity : AppCompatActivity() {
         // 8. 播放音效（播放正確答案的音）
         // 播放音效，拿到 debug 字串
         val tp = if (isCorrect) tapped else (correctTabs.minByOrNull { it.fret } ?: tapped)
+        val wavName = "g${soundManager.currentGuitar()}_${tp.resourceName()}"//組出使用的 wav，方便 debug例如 g2_s1_f15
+        
         val soundDebug = try {
             soundManager.play(tp.resourceName())
         } catch (e: Exception) {
             "💥 ERROR: ${e.message}"
         }
+        
         // 9. 顯示反饋文字
         if (isCorrect) {
             feedbackLabel.text = "\u2713 Correct! ${note.name} — string $string, fret $fret"
             feedbackLabel.setTextColor(Color.parseColor("#4CAF50"))  // 綠色
         } else {
             val hint = correctTabs.minByOrNull { it.fret } ?: correctTabs.first()
-            feedbackLabel.text = "\u2717 Wrong. ${note.name} — e.g. string ${hint.string}, fret ${hint.fret}\n$soundDebug"
+            feedbackLabel.text = "\u2717 Wrong. ${note.name} — e.g. string ${hint.string}, fret ${hint.fret}\n$wavname"
             feedbackLabel.setTextColor(Color.parseColor("#F44336"))  // 紅色
         }
 
