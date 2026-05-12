@@ -58,6 +58,16 @@ class StaffView @JvmOverloads constructor(
         return stepsFromC0 - 30  // E4 的 stepsFromC0 = 4*7+2 = 30
     }
 
+    // 計算音符在低音譜上的位置（最低線 G2 = step 0）
+    private fun bassStep(note: Note): Int {
+        val noteNames = listOf("C","D","E","F","G","A","B")
+        val name = note.name.dropLast(1)
+        val octave = note.name.last().digitToInt()
+        val noteIdx = noteNames.indexOf(name)
+        val stepsFromC0 = octave * 7 + noteIdx
+        return stepsFromC0 - 18  // G2 的 stepsFromC0 = 2*7+4 = 18
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
@@ -147,7 +157,8 @@ class StaffView @JvmOverloads constructor(
         // ==== 10. 逐顆音符畫上去 ====
         notes.forEachIndexed { idx, note ->
             // 10-1. 先算這顆音的 step（相對 E4 底線）
-            val step = trebleStep(note)
+                        // 檢查音符 >= C4 用高音譜，< C4 用低音譜
+            val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
 
             // 10-2. 把 step 轉成 Y 座標（上面已經算好 halfSp）
             val noteY = staffBottom - step * halfSp
