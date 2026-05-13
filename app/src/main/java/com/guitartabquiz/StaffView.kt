@@ -77,6 +77,15 @@ class StaffView @JvmOverloads constructor(
                 // ==== 1. 取得 View 寬高，先畫背景 ====
         val w = width.toFloat()
         val h = height.toFloat()
+                // ===== 全域縮放設定 =====
+        val scaleFactor = 1.3f   // 想放多大就改這裡，例如 1.2 / 1.5 / 2.0
+        canvas.save()            // 先存起原本狀態
+        val originX = w          //         // 1) 把原點移到「畫面右邊中間」最右邊
+        val originY = h / 2f     // 垂直中心
+        canvas.translate(originX, originY)        
+        canvas.scale(scaleFactor, scaleFactor)    // 2) 以這個原點為中心做縮放
+        canvas.translate(-originX, -originY)      // 3) 再把原點移回去左上（因為計算都是以左上寫的）
+        // ==== 從這裡開始，全部沿用你原來的畫法 ====
         canvas.drawRect(0f, 0f, w, h, bgPaint)
                 // ==== 2. 左右邊界：五線譜畫多寬 ====
         val staffLeft = 6f
@@ -154,9 +163,9 @@ class StaffView @JvmOverloads constructor(
         //   - 只有一顆 → 放在中間
         //   - 多顆 → 均勻鋪開
         val spacing = if (notes.size > 1) {
-            noteAreaW / (notes.size - 1)
+            (noteAreaW / (notes.size - 1)) * 0.6f   // 這裡乘以 0.6 → note 更靠近
         } else {
-            noteAreaW / 2f
+            (noteAreaW / 2f) * 0.6f
         }
 
         // ==== 第二組音符的「整排 Y 位移」 ====
@@ -268,10 +277,14 @@ class StaffView @JvmOverloads constructor(
             //     這裡每顆會重新設定 textSize / color
             labelPaint.textSize = lineSpacing * 2f
             labelPaint.color = noteColor
+            labelPaint.textAlign = Paint.Align.LEFT   // 從左邊開始畫，貼在 note 右邊
+            val textX = noteX + r * 2f              // 符頭再右邊一點
+            val textY = noteY + lineSpacing * 0.2f    // 稍微往下 0.2 格，視覺居中
+
             canvas.drawText(
                 label,
-                noteX,
-                staffBottomForThisNote + lineSpacing * 1.7f + yOffset,
+                textX,
+                textY,
                 labelPaint
             )
 
@@ -368,7 +381,11 @@ class StaffView @JvmOverloads constructor(
                 NoteState.WRONG   -> colorWrong     // 錯 → 跟第一組一樣紅
                 NoteState.DEFAULT -> colorDefault2  // 未答 → 這排才用藍色
             }
-
+            
+            // ★★★ 這一行就是你要的：同一顆 note，但 octave-1 ★★★
+            val pitch = note.name.dropLast(1)               // "D4" → "D"
+            val octave = note.name.last().digitToInt()      // 4
+            val labelB = pitch + (octave - 1).toString()     // "D3"
             // 5. 呼叫通用畫 note 函式，這次 yOffset = secondSetOffsetY
             drawOneNote(
                 canvas = canvas,
@@ -377,7 +394,7 @@ class StaffView @JvmOverloads constructor(
                 staffBottomForThisNote = currentStaffBottom,
                 state = state,
                 noteColor = noteColor,
-                label = note.name,           // 你要改成別的字（例如「+8」）也在這裡改
+                label = labelB,           // 你要改成別的字（例如「+8」）也在這裡改
                 yOffset = secondSetOffsetY   // ★★★ 第二組就是靠這個整排往下移
             )
         }
