@@ -80,7 +80,7 @@ class StaffView @JvmOverloads constructor(
                 // ===== 全域縮放設定 =====
         val scaleFactor = 1.3f   // 想放多大就改這裡，例如 1.2 / 1.5 / 2.0
         canvas.save()            // 先存起原本狀態
-        val originX = w          //         // 1) 把原點移到「畫面右邊中間」最右邊
+        val originX = 0F          //         // 1) 把原點移到「畫面右邊中間」最右邊
         val originY = h / 2f     // 垂直中心
         canvas.translate(originX, originY)        
         canvas.scale(scaleFactor, scaleFactor)    // 2) 以這個原點為中心做縮放
@@ -414,7 +414,7 @@ class StaffView @JvmOverloads constructor(
             textAlign = Paint.Align.RIGHT
         }
         val baseX = w - 20f        // 先算整串文字的基準座標
-        val baseY = topMargin + lineSpacing * 2f
+        val baseY = topMargin + lineSpacing * 5f
         val textPiano = "piano"        // 先測量各段文字寬度
         val textMid   = " < tab > "
         val textGuitar= "guitar"
