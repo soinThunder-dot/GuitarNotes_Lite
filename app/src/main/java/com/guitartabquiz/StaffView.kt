@@ -104,7 +104,7 @@ class StaffView @JvmOverloads constructor(
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
         }
         clefPaint.textSize = lineSpacing * 1.6f
-        canvas.drawText("\uD834\uDD22", staffLeft - 8f, bassBottom - lineSpacing * 1.5f, clefPaint)
+        val bassBottom = staffBottom + lineSpacing * 5f  // 高音底線 + 1空 + 4線 = 5個 lineSpacing
 
         if (notes.isEmpty()) return
 
