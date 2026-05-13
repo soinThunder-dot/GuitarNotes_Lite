@@ -34,6 +34,7 @@ class StaffView @JvmOverloads constructor(
     }
 
     private val colorDefault = Color.parseColor("#F0E68C")  // 金色
+    private val colorDefault2 = Color.parseColor("#42A5F5")  // 藍色
     private val colorCorrect = Color.parseColor("#4CAF50")  // 綠色
     private val colorWrong   = Color.parseColor("#F44336")  // 紅色
 
@@ -73,26 +74,52 @@ class StaffView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+                // ==== 1. 取得 View 寬高，先畫背景 ====
         val w = width.toFloat()
         val h = height.toFloat()
         canvas.drawRect(0f, 0f, w, h, bgPaint)
-
-        val staffLeft = 4f
+                // ==== 2. 左右邊界：五線譜畫多寬 ====
+        val staffLeft = 6f
         val staffRight = w - 4f
-
-        val minStep = -7
+                // ==== 3. 定義我們要支援的音域（以 step 表示）====
+                // trebleStep(note) 的定義：
+                //   E4 (高五線譜底線) step = 0
+                //   每升一個字母音（E→F→G→A→B→C→D...）step +1
+                // 所以：
+                //   E3 = E4 低一個八度 = 7 個 diatonic step  → step = -7
+                //   E7 = E4 高三個八度 = 21 個 diatonic step → step = +21
+                // 最低要畫到的 step：E2
+                // 最高要畫到的 step：E7
+                // step 總數 = 21 - (-14) = 35
+        val minStep = -14
         val maxStep = 21
         val stepRange = maxStep - minStep
+                // ==== 4. 上下預留 margin，避免音符貼螢幕上下邊 ====
+                // 上方保留 5% 高度給空白（避免 E7 貼到螢幕頂）
+                // 下方保留 30% 高度（要放音名文字、對錯符號等）
         val topMargin    = h * 0.05f
         val bottomMargin = h * 0.30f
+                // 可用來畫「E3～E7 這 28 steps」的垂直高度
         val usableHeight = h - topMargin - bottomMargin
-        val halfSp = usableHeight / stepRange
-        val lineSpacing = halfSp * 2f
+                // 每一個「diatonic step」要用多少像素高度：
+                //   usableHeight = stepRange * (高度/一個 step)
+                //   → (高度/一個 step) = usableHeight / stepRange
+        // ==== 5. 決定「E4 底線」要畫在哪個 Y（staffBottom）====
+        // 公式：noteY = staffBottom - step * halfSp
+        // 我們希望：E3 (step=-7) 的 Y ≈ h - bottomMargin   （也就是畫面底部往上留一點）
+        // 代入 step = -7：
+        //   h - bottomMargin = staffBottom - (-7) * halfSp
+        //                    = staffBottom + 7 * halfSp
+        //   staffBottom = h - bottomMargin - 7 * halfSp
+        //   step = -7 → noteY ≈ h - bottomMargin   （E3 貼近底邊）
+        //   step = 21 → noteY ≈ topMargin          （E7 不會超出上邊）
+        val halfSp = usableHeight / stepRange   // 1 個 step 高度（對應 lineSpacing 的一半）
+        val lineSpacing = halfSp * 2f   // 兩個 step = 線與線的距離
         val staffBottom = h - bottomMargin - 7f * halfSp
 
         // ==== 畫高音五線 ====
         for (i in 0..4) {
-            val y = staffBottom - i * lineSpacing
+            val y = staffBottom - i * lineSpacing   // 每條線相距 lineSpacing 像素
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
         }
 
@@ -112,9 +139,14 @@ class StaffView @JvmOverloads constructor(
             bassBottom - lineSpacing * 0.5f, clefPaint)
 
         if (notes.isEmpty()) return
-
+                // ==== 9. 設定音符水平分佈範圍 ====
+                // noteStartX：第一顆音符的 X 起點（讓出 3 個 lineSpacing 的空間給譜號）
         val noteStartX = staffLeft + lineSpacing * 3f
+                // noteAreaW：音符可用的總寬度（右邊再留一個 lineSpacing 的 padding）
         val noteAreaW  = staffRight - noteStartX - lineSpacing
+                // spacing：多個音符之間的水平距離
+                //   - 如果只有 1 顆：放在可用區中間（noteAreaW / 2）
+                //   - 如果 >=2 顆：平均分佈在頭尾之間（除以 notes.size - 1）
         val spacing = if (notes.size > 1) {
             noteAreaW / (notes.size - 1)
         } else {
@@ -132,25 +164,30 @@ class StaffView @JvmOverloads constructor(
             } else {
                 noteStartX + idx * spacing
             }
-            val r = lineSpacing * 0.40f
+
+                        // 10-4. 音符頭半徑（與 lineSpacing 成比例）
+            val r = lineSpacing * 0.45f
 
             val state = noteStates.getOrElse(idx) { NoteState.DEFAULT }
             val noteColor = when (state) {
-                NoteState.CORRECT -> colorCorrect
-                NoteState.WRONG   -> colorWrong
-                NoteState.DEFAULT -> colorDefault
+                NoteState.CORRECT -> colorCorrect   // 答對 → 綠色
+                NoteState.WRONG   -> colorWrong     // 答錯 → 紅色
+                NoteState.DEFAULT -> colorDefault   // 尚未作答 → 金色
             }
-            val notePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            
+            val notePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {// 10-6. 建立畫音符頭的畫筆（實心填滿）
                 color = noteColor
                 style = Paint.Style.FILL
             }
-            val stemPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            val stemPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {// 10-7. 建立畫音符尾巴（stem）的畫筆（描邊線）
                 color = noteColor
                 style = Paint.Style.STROKE
                 strokeWidth = 1.8f
             }
-
-            // 加線
+            // 後面：加線、畫音符頭、畫 stem、畫文字、畫 ✓/✗ 的部分
+            // 全部都用上面算好的 noteX / noteY / r / lineSpacing / halfSp
+            // （這裡就照你原本的程式寫法繼續）
+            // 加線（低於或高於五線範圍）
             if (step < 0) {
                 var s = -2
                 while (s >= step) {
@@ -169,17 +206,17 @@ class StaffView @JvmOverloads constructor(
             }
 
             canvas.drawOval(noteX - r * 1.1f, noteY - r * 0.75f,
-                noteX + r * 1.1f, noteY + r * 0.75f, notePaint)
+                noteX + r * 1.1f, noteY + r * 0.75f, notePaint)            // 繪符頭
             canvas.drawLine(noteX + r, noteY, noteX + r,
-                noteY - lineSpacing * 2.8f, stemPaint)
+                noteY - lineSpacing * 2.8f, stemPaint)            // 繪符尾
 
-            labelPaint.textSize = lineSpacing * 1f
+            labelPaint.textSize = lineSpacing * 2f            // 繪音名
             labelPaint.color = noteColor
             canvas.drawText(note.name, noteX,
                 currentStaffBottom + lineSpacing * 1.7f, labelPaint)
 
             if (state != NoteState.DEFAULT) {
-                val badge = if (state == NoteState.CORRECT) "\u2713" else "\u2717"
+                val badge = if (state == NoteState.CORRECT) "\u2713" else "\u2717"    // 繪對錯記號
                 val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                     color = noteColor; textSize = lineSpacing * 0.9f; textAlign = Paint.Align.CENTER
                     typeface = Typeface.DEFAULT_BOLD
@@ -187,22 +224,31 @@ class StaffView @JvmOverloads constructor(
                 canvas.drawText(badge, noteX, noteY - lineSpacing * 3.2f, badgePaint)
             }
         }
-
-        // ==== 畫第二組音符（低一個八度，藍色）====
+        // ==== 畫音符（第二組：一模一樣，但低一個八度，未答＝亮藍）====
         notes.forEachIndexed { idx, note ->
+            // 把這顆 note 當成「低一個八度」來算位置
             val lowerMidi = note.midiActual - 12
             val lowerNote = note.copy(midiActual = lowerMidi)
+        
             val step = if (lowerMidi >= 60) trebleStep(lowerNote) else bassStep(lowerNote)
             val currentStaffBottom = if (lowerMidi >= 60) staffBottom else bassBottom
             val noteY = currentStaffBottom - step * halfSp
+        
             val noteX = if (notes.size == 1) {
                 noteStartX + noteAreaW / 2f
             } else {
                 noteStartX + idx * spacing
             }
-            val r = lineSpacing * 0.40f
-
-            val noteColor = Color.BLUE  // 藍色
+        
+            val r = lineSpacing * 0.45f
+        
+            val state = noteStates.getOrElse(idx) { NoteState.DEFAULT }
+            val noteColor = when (state) {
+                NoteState.CORRECT -> colorCorrect               // 對 → 綠
+                NoteState.WRONG   -> colorWrong                 // 錯 → 紅
+                NoteState.DEFAULT -> colorDefault2              // 未答 → 你上面定義的亮藍
+            }
+        
             val notePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = noteColor
                 style = Paint.Style.FILL
@@ -212,7 +258,8 @@ class StaffView @JvmOverloads constructor(
                 style = Paint.Style.STROKE
                 strokeWidth = 1.8f
             }
-
+        
+            // 加線（低於或高於五線範圍）
             if (step < 0) {
                 var s = -2
                 while (s >= step) {
@@ -229,26 +276,73 @@ class StaffView @JvmOverloads constructor(
                     s += 2
                 }
             }
-
-            canvas.drawOval(noteX - r * 1.1f, noteY - r * 0.75f,
-                noteX + r * 1.1f, noteY + r * 0.75f, notePaint)
-            canvas.drawLine(noteX + r, noteY, noteX + r,
-                noteY - lineSpacing * 2.8f, stemPaint)
-
-            labelPaint.textSize = lineSpacing * 1f
+        
+            // 符頭
+            canvas.drawOval(
+                noteX - r * 1.1f, noteY - r * 0.75f,
+                noteX + r * 1.1f, noteY + r * 0.75f,
+                notePaint
+            )
+        
+            // 符尾
+            canvas.drawLine(
+                noteX + r, noteY,
+                noteX + r, noteY - lineSpacing * 2.8f,
+                stemPaint
+            )
+        
+            // 音名（用同一個顏色）
+            labelPaint.textSize = lineSpacing * 2f
             labelPaint.color = noteColor
-            canvas.drawText(lowerNote.name, noteX,
-                currentStaffBottom + lineSpacing * 1.7f, labelPaint)
+            canvas.drawText(
+                lowerNote.name,
+                noteX,
+                currentStaffBottom + lineSpacing * 1.7f,
+                labelPaint
+            )
+        
+            // 對錯記號跟第一組一樣邏輯
+            if (state != NoteState.DEFAULT) {
+                val badge = if (state == NoteState.CORRECT) "✓" else "✗"
+                val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = noteColor
+                    textSize = lineSpacing * 0.9f
+                    textAlign = Paint.Align.CENTER
+                    typeface = Typeface.DEFAULT_BOLD
+                }
+                canvas.drawText(badge, noteX, noteY - lineSpacing * 3.2f, badgePaint)
+            }
         }
+        
 
-        // ==== 畫右上角文字 ====
+
+
+
+        
+        // 右上角模式文字
         val cornerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.WHITE
             textSize = lineSpacing * 1.2f
             textAlign = Paint.Align.RIGHT
         }
-        canvas.drawText("piano < tab > guitar", w - 20f,
-            topMargin + lineSpacing * 2f, cornerPaint)
+        val baseX = w - 20f        // 先算整串文字的基準座標
+        val baseY = topMargin + lineSpacing * 2f
+        val textPiano = "piano"        // 先測量各段文字寬度
+        val textMid   = " < tab > "
+        val textGuitar= "guitar"
+        val widthPiano  = cornerPaint.measureText(textPiano)
+        val widthMid    = cornerPaint.measureText(textMid)
+        val widthGuitar = cornerPaint.measureText(textGuitar)
+        // 整串總長，用來推回每一段的起點
+        val totalWidth = widthPiano + widthMid + widthGuitar
+        cornerPaint.color = Color.parseColor("#42A5F5")   // bright blue
+        canvas.drawText(textPiano, baseX - totalWidth + widthPiano, baseY, cornerPaint)
+        cornerPaint.color = Color.WHITE  //白色
+        canvas.drawText(textMid, baseX - totalWidth + widthPiano + widthMid, baseY, cornerPaint)
+        cornerPaint.color = Color.parseColor("#FFD600")   // yellow
+        canvas.drawText(textGuitar, baseX, baseY, cornerPaint)
+
+
+        
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
