@@ -2,10 +2,12 @@ name: Android Build  #87
 
 on:
   push:
-    branches: [ main ]
+    paths:
+      - '.github/workflows/build.yml'   # 只有這個檔被改動才觸發
   pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+    paths:
+      - '.github/workflows/build.yml'   # 開 PR 且有改這個檔，也會觸發
+  workflow_dispatch:                    # 手動依然可以跑
 
 jobs:
   build:
