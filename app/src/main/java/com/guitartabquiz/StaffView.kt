@@ -78,9 +78,9 @@ class StaffView @JvmOverloads constructor(
         val w = width.toFloat()
         val h = height.toFloat()
                 // ===== 全域縮放設定 =====
-        val scaleFactor = 1.3f   // 想放多大就改這裡，例如 1.2 / 1.5 / 2.0
+        val scaleFactor = 1.5f   // 想放多大就改這裡，例如 1.2 / 1.5 / 2.0
         canvas.save()            // 先存起原本狀態
-        val originX = 0F          //         // 1) 把原點移到「畫面右邊中間」最右邊
+        val originX = -2f          //         // 1) 把原點移到「畫面右邊中間」最右邊
         val originY = h / 2f     // 垂直中心
         canvas.translate(originX, originY)        
         canvas.scale(scaleFactor, scaleFactor)    // 2) 以這個原點為中心做縮放
@@ -275,10 +275,10 @@ class StaffView @JvmOverloads constructor(
             // =======================
             // ★★★ labelPaint 是整個 View 共用的畫筆，
             //     這裡每顆會重新設定 textSize / color
-            labelPaint.textSize = lineSpacing * 2f
+            labelPaint.textSize = lineSpacing * 1.5f
             labelPaint.color = noteColor
             labelPaint.textAlign = Paint.Align.LEFT   // 從左邊開始畫，貼在 note 右邊
-            val textX = noteX + r * 2f              // 符頭再右邊一點
+            val textX = noteX + r * 3f              // 符頭再右邊一點
             val textY = noteY + lineSpacing * 0.2f    // 稍微往下 0.2 格，視覺居中
 
             canvas.drawText(
@@ -410,11 +410,11 @@ class StaffView @JvmOverloads constructor(
         
         // 右上角模式文字
         val cornerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            textSize = lineSpacing * 1.2f
+            textSize = lineSpacing * 1.6f
             textAlign = Paint.Align.RIGHT
         }
         val baseX = w - 20f        // 先算整串文字的基準座標
-        val baseY = topMargin + lineSpacing * 5f
+        val baseY = topMargin + lineSpacing * -3f
         val textPiano = "piano"        // 先測量各段文字寬度
         val textMid   = " < tab > "
         val textGuitar= "guitar"
