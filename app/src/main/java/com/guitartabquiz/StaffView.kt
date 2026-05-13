@@ -138,117 +138,97 @@ class StaffView @JvmOverloads constructor(
         canvas.drawText("\uD834\uDD22", staffLeft - 12f,
             bassBottom - lineSpacing * 0.5f, clefPaint)
 
+                // ============================================
+        // ======= 從這裡開始：只負責畫音符區塊 =======
+        // ============================================
+
+        // ★★★ 如果沒有音符資料，直接結束，不畫任何音符 ★★★
         if (notes.isEmpty()) return
-                // ==== 9. 設定音符水平分佈範圍 ====
-                // noteStartX：第一顆音符的 X 起點（讓出 3 個 lineSpacing 的空間給譜號）
+
+        // ==== 9. 設定音符在水平方向的分佈（兩組共用） ====
+        // noteStartX：所有音符「最左邊」的起點 X，前面三格留給譜號
         val noteStartX = staffLeft + lineSpacing * 3f
-                // noteAreaW：音符可用的總寬度（右邊再留一個 lineSpacing 的 padding）
+        // noteAreaW：音符可以使用的水平總寬度（右邊再留一格 padding）
         val noteAreaW  = staffRight - noteStartX - lineSpacing
-                // spacing：多個音符之間的水平距離
-                //   - 如果只有 1 顆：放在可用區中間（noteAreaW / 2）
-                //   - 如果 >=2 顆：平均分佈在頭尾之間（除以 notes.size - 1）
+        // spacing：音符之間的間距
+        //   - 只有一顆 → 放在中間
+        //   - 多顆 → 均勻鋪開
         val spacing = if (notes.size > 1) {
             noteAreaW / (notes.size - 1)
         } else {
             noteAreaW / 2f
         }
 
-        // ==== 畫音符（第一組）====
-        notes.forEachIndexed { idx, note ->
-            // 檢查音符 >= C4 用高音譜，< C4 用低音譜
-            val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
-            val currentStaffBottom = if (note.midiActual >= 60) staffBottom else bassBottom
-            val noteY = currentStaffBottom - step * halfSp
-            val noteX = if (notes.size == 1) {
-                noteStartX + noteAreaW / 2f
-            } else {
-                noteStartX + idx * spacing
-            }
+        // ==== 第二組音符的「整排 Y 位移」 ====
+        // 注意：這個只會影響 2nd set（下面 forEach 傳 yOffset 的地方）
+        //      1st set 一律用 yOffset = 0f，絕對不會被影響
+        // 想要兩排靠更近 / 更遠，就改這個數字
+        val secondSetOffsetY = lineSpacing * 4f   // ★★★ 第二組整排往下移 4 個 lineSpacing ★★★
 
-                        // 10-4. 音符頭半徑（與 lineSpacing 成比例）
+        // ==========================================================
+        // 把「畫一顆音符」寫成一個函式，1st / 2nd 兩組共同呼叫
+        // 千萬注意：
+        //   1. 這個函式只吃「顏色 / 位置 / 狀態」，不改 noteStates 裡的值
+        //   2. 所以狀態只會由 setNoteState() 改一次，不會在 onDraw 裡被洗掉
+        // ==========================================================
+        fun drawOneNote(
+            canvas: Canvas,
+            noteX: Float,                 // 這顆音符的 X 座標（兩組都事先算好再丟進來）
+            step: Int,                    // 這顆音符相對於該譜表底線的「音階 step」
+            staffBottomForThisNote: Float,// 這顆音符所屬譜表的「底線 Y」（高音或低音）
+            state: NoteState,             // 這顆的狀態：DEFAULT / CORRECT / WRONG
+            noteColor: Int,               // 這顆要用什麼顏色畫（呼叫者決定）
+            label: String,                // 要顯示在下面的文字（音名或別的）
+            yOffset: Float                // 額外 Y 位移（1st = 0；2nd = secondSetOffsetY）
+        ) {
+            // 半徑跟 lineSpacing 綁在一起，放大縮小螢幕時會跟著變
             val r = lineSpacing * 0.45f
 
-            val state = noteStates.getOrElse(idx) { NoteState.DEFAULT }
-            val noteColor = when (state) {
-                NoteState.CORRECT -> colorCorrect   // 答對 → 綠色
-                NoteState.WRONG   -> colorWrong     // 答錯 → 紅色
-                NoteState.DEFAULT -> colorDefault   // 尚未作答 → 金色
-            }
-            
-            val notePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {// 10-6. 建立畫音符頭的畫筆（實心填滿）
-                color = noteColor
-                style = Paint.Style.FILL
-            }
-            val stemPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {// 10-7. 建立畫音符尾巴（stem）的畫筆（描邊線）
-                color = noteColor
-                style = Paint.Style.STROKE
-                strokeWidth = 1.8f
-            }
-            // 後面：加線、畫音符頭、畫 stem、畫文字、畫 ✓/✗ 的部分
-            // 全部都用上面算好的 noteX / noteY / r / lineSpacing / halfSp
-            // （這裡就照你原本的程式寫法繼續）
-            // 加線（低於或高於五線範圍）
+            // =======================
+            // 1. 畫加線（高於/低於五線）
+            // =======================
+            // ★★★ 注意：這邊用的是 step / staffBottomForThisNote / yOffset，
+            //      所以 1st / 2nd 的「加線位置」跟音符位置完全一致，不會飄掉
             if (step < 0) {
                 var s = -2
                 while (s >= step) {
-                    val ly = currentStaffBottom - s * halfSp
-                    canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
+                    val ly = staffBottomForThisNote - s * halfSp + yOffset
+                    canvas.drawLine(
+                        noteX - r * 1.6f,
+                        ly,
+                        noteX + r * 1.6f,
+                        ly,
+                        ledgerPaint
+                    )
                     s -= 2
                 }
             }
             if (step > 8) {
                 var s = 10
                 while (s <= step) {
-                    val ly = currentStaffBottom - s * halfSp
-                    canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
+                    val ly = staffBottomForThisNote - s * halfSp + yOffset
+                    canvas.drawLine(
+                        noteX - r * 1.6f,
+                        ly,
+                        noteX + r * 1.6f,
+                        ly,
+                        ledgerPaint
+                    )
                     s += 2
                 }
             }
 
-            canvas.drawOval(noteX - r * 1.1f, noteY - r * 0.75f,
-                noteX + r * 1.1f, noteY + r * 0.75f, notePaint)            // 繪符頭
-            canvas.drawLine(noteX + r, noteY, noteX + r,
-                noteY - lineSpacing * 2.8f, stemPaint)            // 繪符尾
+            // =======================
+            // 2. 算出這顆音符真正要畫的 Y
+            // =======================
+            // staffBottomForThisNote：高音或低音譜底線
+            // step：這顆音相對底線往上幾個 diatonic step
+            // yOffset：整排再往上/下平移一段
+            val noteY = staffBottomForThisNote - step * halfSp + yOffset
 
-            labelPaint.textSize = lineSpacing * 2f            // 繪音名
-            labelPaint.color = noteColor
-            canvas.drawText(note.name, noteX,
-                currentStaffBottom + lineSpacing * 1.7f, labelPaint)
-
-            if (state != NoteState.DEFAULT) {
-                val badge = if (state == NoteState.CORRECT) "\u2713" else "\u2717"    // 繪對錯記號
-                val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = noteColor; textSize = lineSpacing * 0.9f; textAlign = Paint.Align.CENTER
-                    typeface = Typeface.DEFAULT_BOLD
-                }
-                canvas.drawText(badge, noteX, noteY - lineSpacing * 3.2f, badgePaint)
-            }
-        }
-        // ==== 畫音符（第二組：一模一樣，但低一個八度，未答＝亮藍）====
-        notes.forEachIndexed { idx, note ->
-            // 把這顆 note 當成「低一個八度」來算位置
-            val lowerMidi = note.midiActual - 12
-            val lowerNote = note.copy(midiActual = lowerMidi)
-        
-            val step = if (lowerMidi >= 60) trebleStep(lowerNote) else bassStep(lowerNote)
-            val currentStaffBottom = if (lowerMidi >= 60) staffBottom else bassBottom
-            val noteY = currentStaffBottom - step * halfSp
-        
-            val noteX = if (notes.size == 1) {
-                noteStartX + noteAreaW / 2f
-            } else {
-                noteStartX + idx * spacing
-            }
-        
-            val r = lineSpacing * 0.45f
-        
-            val state = noteStates.getOrElse(idx) { NoteState.DEFAULT }
-            val noteColor = when (state) {
-                NoteState.CORRECT -> colorCorrect               // 對 → 綠
-                NoteState.WRONG   -> colorWrong                 // 錯 → 紅
-                NoteState.DEFAULT -> colorDefault2              // 未答 → 你上面定義的亮藍
-            }
-        
+            // =======================
+            // 3. 準備畫筆（符頭 + 符尾）
+            // =======================
             val notePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = noteColor
                 style = Paint.Style.FILL
@@ -258,50 +238,47 @@ class StaffView @JvmOverloads constructor(
                 style = Paint.Style.STROKE
                 strokeWidth = 1.8f
             }
-        
-            // 加線（低於或高於五線範圍）
-            if (step < 0) {
-                var s = -2
-                while (s >= step) {
-                    val ly = currentStaffBottom - s * halfSp
-                    canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
-                    s -= 2
-                }
-            }
-            if (step > 8) {
-                var s = 10
-                while (s <= step) {
-                    val ly = currentStaffBottom - s * halfSp
-                    canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
-                    s += 2
-                }
-            }
-        
-            // 符頭
+
+            // =======================
+            // 4. 畫符頭（橢圓）
+            // =======================
             canvas.drawOval(
-                noteX - r * 1.1f, noteY - r * 0.75f,
-                noteX + r * 1.1f, noteY + r * 0.75f,
+                noteX - r * 1.1f,
+                noteY - r * 0.75f,
+                noteX + r * 1.1f,
+                noteY + r * 0.75f,
                 notePaint
             )
-        
-            // 符尾
+
+            // =======================
+            // 5. 畫符尾（直線）
+            // =======================
             canvas.drawLine(
-                noteX + r, noteY,
-                noteX + r, noteY - lineSpacing * 2.8f,
+                noteX + r,
+                noteY,
+                noteX + r,
+                noteY - lineSpacing * 2.8f,
                 stemPaint
             )
-        
-            // 音名（用同一個顏色）
+
+            // =======================
+            // 6. 畫音名文字（note name）
+            // =======================
+            // ★★★ labelPaint 是整個 View 共用的畫筆，
+            //     這裡每顆會重新設定 textSize / color
             labelPaint.textSize = lineSpacing * 2f
             labelPaint.color = noteColor
             canvas.drawText(
-                lowerNote.name,
+                label,
                 noteX,
-                currentStaffBottom + lineSpacing * 1.7f,
+                staffBottomForThisNote + lineSpacing * 1.7f + yOffset,
                 labelPaint
             )
-        
-            // 對錯記號跟第一組一樣邏輯
+
+            // =======================
+            // 7. 畫對錯符號（✓ / ✗）
+            // =======================
+            // ★★★ 重點：這裡只看 state，完全不改 state ★★★
             if (state != NoteState.DEFAULT) {
                 val badge = if (state == NoteState.CORRECT) "✓" else "✗"
                 val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -310,9 +287,104 @@ class StaffView @JvmOverloads constructor(
                     textAlign = Paint.Align.CENTER
                     typeface = Typeface.DEFAULT_BOLD
                 }
-                canvas.drawText(badge, noteX, noteY - lineSpacing * 3.2f, badgePaint)
+                canvas.drawText(
+                    badge,
+                    noteX,
+                    noteY - lineSpacing * 3.2f,
+                    badgePaint
+                )
             }
         }
+
+        // ==========================================================
+        // =============== 第一組音符（原始那排） ====================
+        // ==========================================================
+        // ★★★ 顏色規則：
+        //     DEFAULT → 金色 (colorDefault)
+        //     CORRECT → 綠色 (colorCorrect)
+        //     WRONG   → 紅色 (colorWrong)
+        // ★★★ 千萬不要把 DEFAULT 改成 colorDefault2，不然整排會變藍
+        notes.forEachIndexed { idx, note ->
+            // 1. 根據 midiActual 決定這顆音要畫在高音譜或低音譜
+            val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
+            val currentStaffBottom = if (note.midiActual >= 60) staffBottom else bassBottom
+
+            // 2. 水平方向位置：所有 set 共用同一個 noteX，才會對齊
+            val noteX = if (notes.size == 1) {
+                noteStartX + noteAreaW / 2f
+            } else {
+                noteStartX + idx * spacing
+            }
+
+            // 3. 讀取這顆音目前的狀態（如果 notes 跟 noteStates 長度不同，就給 DEFAULT）
+            val state = noteStates.getOrElse(idx) { NoteState.DEFAULT }
+
+            // 4. 第一組顏色 mapping（預設金色）
+            val noteColor = when (state) {
+                NoteState.CORRECT -> colorCorrect   // 對 → 綠
+                NoteState.WRONG   -> colorWrong     // 錯 → 紅
+                NoteState.DEFAULT -> colorDefault   // 未答 → 金色（只在第一組用）
+            }
+
+            // 5. 呼叫通用畫 note 函式，yOffset = 0f 表示「原本那排」
+            drawOneNote(
+                canvas = canvas,
+                noteX = noteX,
+                step = step,
+                staffBottomForThisNote = currentStaffBottom,
+                state = state,
+                noteColor = noteColor,
+                label = note.name,  // 第一組顯示原本音名
+                yOffset = 0f        // ★★★ 第一組絕對不要改這個（0 就是原始高度）
+            )
+        }
+
+        // ==========================================================
+        // =============== 第二組音符（偏移＋藍色） ==================
+        // ==========================================================
+        // ★★★ 顏色規則：
+        //     DEFAULT → 藍色 (colorDefault2)
+        //     CORRECT → 綠色 (colorCorrect)
+        //     WRONG   → 紅色 (colorWrong)
+        // ★★★ 注意：這裡只改「看起來的顏色」，完全不改 noteStates 的值
+        notes.forEachIndexed { idx, note ->
+            // 1. 一樣用原始 note 的 midiActual 決定高音/低音譜
+            val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
+            val currentStaffBottom = if (note.midiActual >= 60) staffBottom else bassBottom
+
+            // 2. 水平位置跟第一組完全相同，這樣兩組會垂直對齊
+            val noteX = if (notes.size == 1) {
+                noteStartX + noteAreaW / 2f
+            } else {
+                noteStartX + idx * spacing
+            }
+
+            // 3. 狀態一樣從 noteStates 讀，同一顆 idx 共享狀態
+            val state = noteStates.getOrElse(idx) { NoteState.DEFAULT }
+
+            // 4. 第二組顏色 mapping（預設藍色）
+            val noteColor = when (state) {
+                NoteState.CORRECT -> colorCorrect   // 對 → 跟第一組一樣綠
+                NoteState.WRONG   -> colorWrong     // 錯 → 跟第一組一樣紅
+                NoteState.DEFAULT -> colorDefault2  // 未答 → 這排才用藍色
+            }
+
+            // 5. 呼叫通用畫 note 函式，這次 yOffset = secondSetOffsetY
+            drawOneNote(
+                canvas = canvas,
+                noteX = noteX,
+                step = step,
+                staffBottomForThisNote = currentStaffBottom,
+                state = state,
+                noteColor = noteColor,
+                label = note.name,           // 你要改成別的字（例如「+8」）也在這裡改
+                yOffset = secondSetOffsetY   // ★★★ 第二組就是靠這個整排往下移
+            )
+        }
+
+        // ============================================
+        // ======= 到這裡為止：音符區塊結束 ===========
+        // ============================================
         
 
 
