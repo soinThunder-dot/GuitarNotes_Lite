@@ -15,13 +15,15 @@ class StaffView @JvmOverloads constructor(
 ) : View(context, attrs) {
 
     private val staffPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#CCCCCC"); strokeWidth = 1.8f; style = Paint.Style.STROKE
+        color = Color.parseColor("#CCCCCC"); strokeWidth = 1.8f;
+        style = Paint.Style.STROKE
     }
     private val bgPaint = Paint().apply {
         color = Color.parseColor("#1A1A2E"); style = Paint.Style.FILL
     }
     private val ledgerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#CCCCCC"); strokeWidth = 1.8f; style = Paint.Style.STROKE
+        color = Color.parseColor("#CCCCCC"); strokeWidth = 1.8f;
+        style = Paint.Style.STROKE
     }
     private val clefPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#AAAAAA"); textAlign = Paint.Align.LEFT
@@ -36,7 +38,8 @@ class StaffView @JvmOverloads constructor(
     private val colorWrong   = Color.parseColor("#F44336")  // 紅色
 
     var notes: List<Note> = emptyList()
-        set(value) { field = value; noteStates = MutableList(value.size) { NoteState.DEFAULT }; invalidate() }
+        set(value) { field = value; noteStates =
+            MutableList(value.size) { NoteState.DEFAULT }; invalidate() }
 
     var noteStates: MutableList<NoteState> = mutableListOf()
         set(value) { field = value; invalidate() }
@@ -74,7 +77,7 @@ class StaffView @JvmOverloads constructor(
         val h = height.toFloat()
         canvas.drawRect(0f, 0f, w, h, bgPaint)
 
-        val staffLeft  = 4f
+        val staffLeft = 4f
         val staffRight = w - 4f
 
         val minStep = -7
@@ -95,49 +98,52 @@ class StaffView @JvmOverloads constructor(
 
         // ==== 畫高音譜號 ====
         clefPaint.textSize = lineSpacing * 2.2f
-        canvas.drawText("\uD834\uDD1E", staffLeft - 12f, staffBottom + lineSpacing * 0.75f, clefPaint)
+        canvas.drawText("\uD834\uDD1E", staffLeft - 12f,
+            staffBottom + lineSpacing * 0.75f, clefPaint)
 
-        // ==== 畫低音五線 + 低音譜號 ====
-        val bassBottom = staffBottom + lineSpacing * 10f
+        // ==== 畫低音五線 + 低音譜號（間隔正好 1 條看不見的線）====
+        val bassBottom = staffBottom + lineSpacing * 6f
         for (i in 0..4) {
             val y = bassBottom - i * lineSpacing
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
         }
         clefPaint.textSize = lineSpacing * 1.6f
-        val bassBottom = staffBottom + lineSpacing * 5f  // 高音底線 + 1空 + 4線 = 5個 lineSpacing
+        canvas.drawText("\uD834\uDD22", staffLeft - 12f,
+            bassBottom - lineSpacing * 0.5f, clefPaint)
 
         if (notes.isEmpty()) return
 
         val noteStartX = staffLeft + lineSpacing * 3f
         val noteAreaW  = staffRight - noteStartX - lineSpacing
-        val spacing = if (notes.size > 1) { noteAreaW / (notes.size - 1) } else { noteAreaW / 2f }
+        val spacing = if (notes.size > 1) {
+            noteAreaW / (notes.size - 1)
+        } else {
+            noteAreaW / 2f
+        }
 
-        // ==== 畫音符 ====
+        // ==== 畫音符（第一組）====
         notes.forEachIndexed { idx, note ->
             // 檢查音符 >= C4 用高音譜，< C4 用低音譜
             val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
             val currentStaffBottom = if (note.midiActual >= 60) staffBottom else bassBottom
             val noteY = currentStaffBottom - step * halfSp
-
             val noteX = if (notes.size == 1) {
                 noteStartX + noteAreaW / 2f
             } else {
                 noteStartX + idx * spacing
             }
-
             val r = lineSpacing * 0.40f
+
             val state = noteStates.getOrElse(idx) { NoteState.DEFAULT }
             val noteColor = when (state) {
                 NoteState.CORRECT -> colorCorrect
                 NoteState.WRONG   -> colorWrong
                 NoteState.DEFAULT -> colorDefault
             }
-
             val notePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = noteColor
                 style = Paint.Style.FILL
             }
-
             val stemPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = noteColor
                 style = Paint.Style.STROKE
@@ -162,12 +168,15 @@ class StaffView @JvmOverloads constructor(
                 }
             }
 
-            canvas.drawOval(noteX - r * 1.1f, noteY - r * 0.75f, noteX + r * 1.1f, noteY + r * 0.75f, notePaint)
-            canvas.drawLine(noteX + r, noteY, noteX + r, noteY - lineSpacing * 2.8f, stemPaint)
+            canvas.drawOval(noteX - r * 1.1f, noteY - r * 0.75f,
+                noteX + r * 1.1f, noteY + r * 0.75f, notePaint)
+            canvas.drawLine(noteX + r, noteY, noteX + r,
+                noteY - lineSpacing * 2.8f, stemPaint)
 
             labelPaint.textSize = lineSpacing * 1f
             labelPaint.color = noteColor
-            canvas.drawText(note.name, noteX, currentStaffBottom + lineSpacing * 1.7f, labelPaint)
+            canvas.drawText(note.name, noteX,
+                currentStaffBottom + lineSpacing * 1.7f, labelPaint)
 
             if (state != NoteState.DEFAULT) {
                 val badge = if (state == NoteState.CORRECT) "\u2713" else "\u2717"
@@ -178,38 +187,26 @@ class StaffView @JvmOverloads constructor(
                 canvas.drawText(badge, noteX, noteY - lineSpacing * 3.2f, badgePaint)
             }
         }
-    }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        setMeasuredDimension(
-            resolveSize(800, widthMeasureSpec),
-            resolveSize(240, heightMeasureSpec)
-        )
-
-        // ==== 畫第二組音符（低一個八度，藍色） ====
+        // ==== 畫第二組音符（低一個八度，藍色）====
         notes.forEachIndexed { idx, note ->
             val lowerMidi = note.midiActual - 12
             val lowerNote = note.copy(midiActual = lowerMidi)
-            
             val step = if (lowerMidi >= 60) trebleStep(lowerNote) else bassStep(lowerNote)
             val currentStaffBottom = if (lowerMidi >= 60) staffBottom else bassBottom
             val noteY = currentStaffBottom - step * halfSp
-
             val noteX = if (notes.size == 1) {
                 noteStartX + noteAreaW / 2f
             } else {
                 noteStartX + idx * spacing
             }
-
             val r = lineSpacing * 0.40f
-            val state = noteStates.getOrElse(idx) { NoteState.DEFAULT }
-            val noteColor = Color.BLUE  // 藍色
 
+            val noteColor = Color.BLUE  // 藍色
             val notePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = noteColor
                 style = Paint.Style.FILL
             }
-
             val stemPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = noteColor
                 style = Paint.Style.STROKE
@@ -233,21 +230,15 @@ class StaffView @JvmOverloads constructor(
                 }
             }
 
-            canvas.drawOval(noteX - r * 1.1f, noteY - r * 0.75f, noteX + r * 1.1f, noteY + r * 0.75f, notePaint)
-            canvas.drawLine(noteX + r, noteY, noteX + r, noteY - lineSpacing * 2.8f, stemPaint)
+            canvas.drawOval(noteX - r * 1.1f, noteY - r * 0.75f,
+                noteX + r * 1.1f, noteY + r * 0.75f, notePaint)
+            canvas.drawLine(noteX + r, noteY, noteX + r,
+                noteY - lineSpacing * 2.8f, stemPaint)
 
             labelPaint.textSize = lineSpacing * 1f
             labelPaint.color = noteColor
-            canvas.drawText(lowerNote.name, noteX, currentStaffBottom + lineSpacing * 1.7f, labelPaint)
-
-            if (state != NoteState.DEFAULT) {
-                val badge = if (state == NoteState.CORRECT) "\u2713" else "\u2717"
-                val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = noteColor; textSize = lineSpacing * 0.9f; textAlign = Paint.Align.CENTER
-                    typeface = Typeface.DEFAULT_BOLD
-                }
-                canvas.drawText(badge, noteX, noteY - lineSpacing * 3.2f, badgePaint)
-            }
+            canvas.drawText(lowerNote.name, noteX,
+                currentStaffBottom + lineSpacing * 1.7f, labelPaint)
         }
 
         // ==== 畫右上角文字 ====
@@ -256,6 +247,14 @@ class StaffView @JvmOverloads constructor(
             textSize = lineSpacing * 1.2f
             textAlign = Paint.Align.RIGHT
         }
-        canvas.drawText("piano < tab > guitar", w - 20f, topMargin + lineSpacing * 2f, cornerPaint)
+        canvas.drawText("piano < tab > guitar", w - 20f,
+            topMargin + lineSpacing * 2f, cornerPaint)
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        setMeasuredDimension(
+            resolveSize(800, widthMeasureSpec),
+            resolveSize(240, heightMeasureSpec)
+        )
     }
 }
