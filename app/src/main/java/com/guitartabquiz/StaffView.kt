@@ -413,11 +413,11 @@ class StaffView @JvmOverloads constructor(
             textSize = lineSpacing * 1.6f
             textAlign = Paint.Align.RIGHT
         }
-        val baseX = w - 20f        // 先算整串文字的基準座標
-        val baseY = topMargin + lineSpacing * 12f
-        val textPiano = "piano"        // 先測量各段文字寬度
-        val textMid   = " < tab > "
-        val textGuitar= "guitar"
+        val baseX = w - 120f        // 先算整串文字的基準座標
+        val baseY = topMargin + lineSpacing * 9f
+        val textPiano = "piano & pitch"        // 先測量各段文字寬度
+        val textMid   = " <> "
+        val textGuitar= "guitar(+8)"
         val widthPiano  = cornerPaint.measureText(textPiano)
         val widthMid    = cornerPaint.measureText(textMid)
         val widthGuitar = cornerPaint.measureText(textGuitar)
