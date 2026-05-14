@@ -317,6 +317,7 @@ class StaffView @JvmOverloads constructor(
             // 1. 根據 midiActual 決定這顆音要畫在高音譜或低音譜
             val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
             val currentStaffBottom = if (note.midiActual >= 60) staffBottom else bassBottom
+            val isTreble = note.midiActual >= 60   // ★ 加這行
 
             // 2. 水平方向位置：所有 set 共用同一個 noteX，才會對齊
             val noteX = if (notes.size == 1) {
