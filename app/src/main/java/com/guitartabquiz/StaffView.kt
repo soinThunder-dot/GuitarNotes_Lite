@@ -179,7 +179,6 @@ class StaffView @JvmOverloads constructor(
         // 把「畫一顆音符」寫成一個函式，1st / 2nd 兩組共同呼叫
         // 千萬注意：
         //   1. 這個函式只吃「顏色 / 位置 / 狀態」，不改 noteStates 裡的值
-        //   2. 所以狀態只會由 setNoteState() 改一次，不會在 onDraw 裡被洗掉
         // ==========================================================
         fun drawOneNote(
             canvas: Canvas,
@@ -365,6 +364,7 @@ class StaffView @JvmOverloads constructor(
             // 1. 一樣用原始 note 的 midiActual 決定高音/低音譜
             val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
             val currentStaffBottom = if (note.midiActual >= 60) staffBottom else bassBottom
+                    val isTreble = note.midiActual >= 60
 
             // 2. 水平位置跟第一組完全相同，這樣兩組會垂直對齊
             val noteX = if (notes.size == 1) {
