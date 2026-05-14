@@ -147,7 +147,7 @@ class StaffView @JvmOverloads constructor(
         canvas.drawText("\uD834\uDD22", staffLeft - 8f,
             bassBottom - lineSpacing * 0.5f, clefPaint)
 
-                // ============================================
+        // ============================================
         // ======= 從這裡開始：只負責畫音符區塊 =======
         // ============================================
 
@@ -174,6 +174,7 @@ class StaffView @JvmOverloads constructor(
         // 想要兩排靠更近 / 更遠，就改這個數字
         val secondSetOffsetY = lineSpacing * 4f   // ★★★ 第二組整排往下移 4 個 lineSpacing ★★★
 
+        val isTreble = note.midiActual >= 60   // ★ 確認這行在 drawOneNote 之前
         // ==========================================================
         // 把「畫一顆音符」寫成一個函式，1st / 2nd 兩組共同呼叫
         // 千萬注意：
