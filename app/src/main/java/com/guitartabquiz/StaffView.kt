@@ -421,17 +421,22 @@ class StaffView @JvmOverloads constructor(
         val widthPiano  = cornerPaint.measureText(textPiano)
         val widthMid    = cornerPaint.measureText(textMid)
         val widthGuitar = cornerPaint.measureText(textGuitar)
+                
+        // 你要的基準位置（可以繼續調這兩個數字讓整串往中間靠一點）
+        val baseX = staffLeft
+        val baseY = staffBottom + 20f
+
         // 整串總長，用來推回每一段的起點
         val totalWidth = widthPiano + widthMid + widthGuitar
         cornerPaint.color = Color.parseColor("#42A5F5")   // bright blue
         //canvas.drawText(textPiano, baseX - totalWidth + widthPiano, baseY, cornerPaint)
-        canvas.drawText(textPiano, staffLeft , staffBottom + 20f, cornerPaint )
+        canvas.drawText(textPiano, baseX , baseY, cornerPaint )
         cornerPaint.color = Color.WHITE  //白色
         //canvas.drawText(textMid, baseX - totalWidth + widthPiano + widthMid, baseY, cornerPaint)
-        canvas.drawText(textPiano, staffLeft + textPiano , staffBottom + 20f, cornerPaint )
+        canvas.drawText(textPiano, baseX + widthPiano , baseY, cornerPaint )
         cornerPaint.color = Color.parseColor("#FFD600")   // yellow
         //canvas.drawText(textGuitar, baseX, baseY, cornerPaint)
-        canvas.drawText(textPiano, staffLeft + textPiano + textMid, staffBottom + 20f, cornerPaint )
+        canvas.drawText(textPiano, baseX + widthPiano + widthMid, baseY, cornerPaint )
 
 
         
