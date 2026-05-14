@@ -174,14 +174,11 @@ class StaffView @JvmOverloads constructor(
         // 想要兩排靠更近 / 更遠，就改這個數字
         val secondSetOffsetY = lineSpacing * 4f   // ★★★ 第二組整排往下移 4 個 lineSpacing ★★★
 
-        val isTreble = note.midiActual >= 60   // ★ 確認這行在 drawOneNote 之前
         // ==========================================================
         // 把「畫一顆音符」寫成一個函式，1st / 2nd 兩組共同呼叫
         // 千萬注意：
         //   1. 這個函式只吃「顏色 / 位置 / 狀態」，不改 noteStates 裡的值
-        // ==========================================================
         fun drawOneNote(
-            canvas: Canvas,
             noteX: Float,                 // 這顆音符的 X 座標（兩組都事先算好再丟進來）
             step: Int,                    // 這顆音符相對於該譜表底線的「音階 step」
             staffBottomForThisNote: Float,// 這顆音符所屬譜表的「底線 Y」（高音或低音）
