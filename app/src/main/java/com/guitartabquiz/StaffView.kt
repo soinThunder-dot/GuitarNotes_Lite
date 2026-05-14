@@ -134,7 +134,7 @@ class StaffView @JvmOverloads constructor(
 
         // ==== 畫高音譜號 ====
         clefPaint.textSize = lineSpacing * 2.2f
-        canvas.drawText("\uD834\uDD1E", staffLeft - 12f,
+        canvas.drawText("\uD834\uDD1E", staffLeft - 8f,
             staffBottom + lineSpacing * 0.75f, clefPaint)
 
         // ==== 畫低音五線 + 低音譜號（間隔正好 1 條看不見的線）====
@@ -144,7 +144,7 @@ class StaffView @JvmOverloads constructor(
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
         }
         clefPaint.textSize = lineSpacing * 1.6f
-        canvas.drawText("\uD834\uDD22", staffLeft - 12f,
+        canvas.drawText("\uD834\uDD22", staffLeft - 8f,
             bassBottom - lineSpacing * 0.5f, clefPaint)
 
                 // ============================================
@@ -411,10 +411,10 @@ class StaffView @JvmOverloads constructor(
         // 右上角模式文字
         val cornerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = lineSpacing * 1.6f
-            textAlign = Paint.Align.RIGHT
+            textAlign = Paint.Align.LEFT//RIGHT
         }
-        val baseX = w - 120f        // 先算整串文字的基準座標
-        val baseY = topMargin + lineSpacing * 9f
+        //val baseX = w - 120f        // 先算整串文字的基準座標
+        //val baseY = topMargin + lineSpacing * 9f
         val textPiano = "piano & pitch"        // 先測量各段文字寬度
         val textMid   = " <> "
         val textGuitar= "guitar(+8)"
@@ -424,11 +424,14 @@ class StaffView @JvmOverloads constructor(
         // 整串總長，用來推回每一段的起點
         val totalWidth = widthPiano + widthMid + widthGuitar
         cornerPaint.color = Color.parseColor("#42A5F5")   // bright blue
-        canvas.drawText(textPiano, baseX - totalWidth + widthPiano, baseY, cornerPaint)
+        //canvas.drawText(textPiano, baseX - totalWidth + widthPiano, baseY, cornerPaint)
+        canvas.drawText(textPiano, staffLeft , staffBottom + 20f, cornerPaint )
         cornerPaint.color = Color.WHITE  //白色
-        canvas.drawText(textMid, baseX - totalWidth + widthPiano + widthMid, baseY, cornerPaint)
+        //canvas.drawText(textMid, baseX - totalWidth + widthPiano + widthMid, baseY, cornerPaint)
+        canvas.drawText(textPiano, staffLeft + textPiano , staffBottom + 20f, cornerPaint )
         cornerPaint.color = Color.parseColor("#FFD600")   // yellow
-        canvas.drawText(textGuitar, baseX, baseY, cornerPaint)
+        //canvas.drawText(textGuitar, baseX, baseY, cornerPaint)
+        canvas.drawText(textPiano, staffLeft + textPiano + textMid, staffBottom + 20f, cornerPaint )
 
 
         
