@@ -188,7 +188,7 @@ class StaffView @JvmOverloads constructor(
             state: NoteState,             // 這顆的狀態：DEFAULT / CORRECT / WRONG
             noteColor: Int,               // 這顆要用什麼顏色畫（呼叫者決定）
             label: String,                // 要顯示在下面的文字（音名或別的）
-            yOffset: Float                // 額外 Y 位移（1st = 0；2nd = secondSetOffsetY）
+            yOffset: Float,                // 額外 Y 位移（1st = 0；2nd = secondSetOffsetY）
             isTreble: Boolean        // ★★★ 新增：告訴這個函式是高音還是低音 ★★★
 
         ) {
@@ -347,7 +347,8 @@ class StaffView @JvmOverloads constructor(
                 state = state,
                 noteColor = noteColor,
                 label = note.name,  // 第一組顯示原本音名
-                yOffset = 0f        // ★★★ 第一組絕對不要改這個（0 就是原始高度）
+                yOffset = 0f,      // ★★★ 第一組絕對不要改這個（0 就是原始高度）
+                isTreble = isTreble 
             )
         }
 
@@ -394,7 +395,8 @@ class StaffView @JvmOverloads constructor(
                 state = state,
                 noteColor = noteColor,
                 label = labelB,           // 你要改成別的字（例如「+8」）也在這裡改
-                yOffset = secondSetOffsetY   // ★★★ 第二組就是靠這個整排往下移
+                yOffset = secondSetOffsetY,// ★★★ 第二組就是靠這個整排往下移
+                isTreble = isTreble 
             )
         }
 
