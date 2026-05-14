@@ -189,6 +189,8 @@ class StaffView @JvmOverloads constructor(
             noteColor: Int,               // 這顆要用什麼顏色畫（呼叫者決定）
             label: String,                // 要顯示在下面的文字（音名或別的）
             yOffset: Float                // 額外 Y 位移（1st = 0；2nd = secondSetOffsetY）
+            isTreble: Boolean        // ★★★ 新增：告訴這個函式是高音還是低音 ★★★
+
         ) {
             // 半徑跟 lineSpacing 綁在一起，放大縮小螢幕時會跟著變
             val r = lineSpacing * 0.45f
@@ -198,33 +200,30 @@ class StaffView @JvmOverloads constructor(
             // =======================
             // ★★★ 注意：這邊用的是 step / staffBottomForThisNote / yOffset，
             //      所以 1st / 2nd 的「加線位置」跟音符位置完全一致，不會飄掉
-            if (step < 0) {
+            if (!isTreble && step < 0) {// 1. 高音譜「上方」出界（step > 8 = 高於 F5）
                 var s = -2
                 while (s >= step) {
                     val ly = staffBottomForThisNote - s * halfSp + yOffset
                     canvas.drawLine(
-                        noteX - r * 1.6f,
-                        ly,
-                        noteX + r * 1.6f,
-                        ly,
-                        ledgerPaint
+                        noteX - r * 1.6f,ly,noteX + r * 1.6f,ly,ledgerPaint
                     )
                     s -= 2
                 }
             }
-            if (step > 8) {
+            if (isTreble && step > 8) {// 2. 低音譜「下方」出界（step < 0 = 低於 G2）
                 var s = 10
                 while (s <= step) {
                     val ly = staffBottomForThisNote - s * halfSp + yOffset
                     canvas.drawLine(
-                        noteX - r * 1.6f,
-                        ly,
-                        noteX + r * 1.6f,
-                        ly,
-                        ledgerPaint
+                        noteX - r * 1.6f,ly,noteX + r * 1.6f,ly,ledgerPaint
                     )
                     s += 2
                 }
+            }
+            // 3. 剛好是 C4， step = -2（E4 底線下兩格）
+            if (isTreble && step == -2) { //    用 isTreble 判斷是哪組，midY 就是那條線的 Y
+                val ly = staffBottomForThisNote + 2 * halfSp + yOffset
+                canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
             }
 
             // =======================
@@ -424,7 +423,8 @@ class StaffView @JvmOverloads constructor(
                 
         // 你要的基準位置（可以繼續調這兩個數字讓整串往中間靠一點）
         val baseX = staffLeft
-        val baseY = staffBottom + 20f
+        // 五線譜高度 = 4 個 lineSpacing（5 條線之間有 4 個距離）
+        val baseY = staffBottom + 20f + lineSpacing * 4f
 
         // 整串總長，用來推回每一段的起點
         val totalWidth = widthPiano + widthMid + widthGuitar
@@ -433,10 +433,10 @@ class StaffView @JvmOverloads constructor(
         canvas.drawText(textPiano, baseX , baseY, cornerPaint )
         cornerPaint.color = Color.WHITE  //白色
         //canvas.drawText(textMid, baseX - totalWidth + widthPiano + widthMid, baseY, cornerPaint)
-        canvas.drawText(textPiano, baseX + widthPiano , baseY, cornerPaint )
+        canvas.drawText(textMid, baseX + widthPiano , baseY, cornerPaint )
         cornerPaint.color = Color.parseColor("#FFD600")   // yellow
         //canvas.drawText(textGuitar, baseX, baseY, cornerPaint)
-        canvas.drawText(textPiano, baseX + widthPiano + widthMid, baseY, cornerPaint )
+        canvas.drawText(textGuitar, baseX + widthPiano + widthMid, baseY, cornerPaint )
 
 
         
