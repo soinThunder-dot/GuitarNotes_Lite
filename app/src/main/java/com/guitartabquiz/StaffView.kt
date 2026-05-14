@@ -338,7 +338,7 @@ class StaffView @JvmOverloads constructor(
 
             // 5. 呼叫通用畫 note 函式，yOffset = 0f 表示「原本那排」
             drawOneNote(
-                canvas = canvas,
+                //canvas = canvas,
                 noteX = noteX,
                 step = step,
                 staffBottomForThisNote = currentStaffBottom,
@@ -387,7 +387,7 @@ class StaffView @JvmOverloads constructor(
             val labelB = pitch + (octave - 1).toString()     // "D3"
             // 5. 呼叫通用畫 note 函式，這次 yOffset = secondSetOffsetY
             drawOneNote(
-                canvas = canvas,
+                //canvas = canvas,
                 noteX = noteX,
                 step = step,
                 staffBottomForThisNote = currentStaffBottom,
