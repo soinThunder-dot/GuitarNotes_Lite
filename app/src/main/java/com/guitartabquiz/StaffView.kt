@@ -134,7 +134,7 @@ class StaffView @JvmOverloads constructor(
 
         // ==== 畫高音譜號 ====
         clefPaint.textSize = lineSpacing * 2.2f
-        canvas.drawText("\uD834\uDD1E", staffLeft - 8f,
+        canvas.drawText("\uD834\uDD1E", staffLeft - 16f,
             staffBottom + lineSpacing * 0.75f, clefPaint)
 
         // ==== 畫低音五線 + 低音譜號（間隔正好 1 條看不見的線）====
@@ -144,7 +144,7 @@ class StaffView @JvmOverloads constructor(
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
         }
         clefPaint.textSize = lineSpacing * 1.6f
-        canvas.drawText("\uD834\uDD22", staffLeft - 8f,
+        canvas.drawText("\uD834\uDD22", staffLeft - 16f,
             bassBottom - lineSpacing * 0.5f, clefPaint)
 
         // ============================================
@@ -425,7 +425,7 @@ class StaffView @JvmOverloads constructor(
         // 你要的基準位置（可以繼續調這兩個數字讓整串往中間靠一點）
         val baseX = staffLeft
         // 五線譜高度 = 4 個 lineSpacing（5 條線之間有 4 個距離）
-        val baseY = staffBottom + 20f + lineSpacing * 4f
+        val baseY = staffBottom + 20f + lineSpacing * 6f
 
         // 整串總長，用來推回每一段的起點
         val totalWidth = widthPiano + widthMid + widthGuitar
