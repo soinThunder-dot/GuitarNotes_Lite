@@ -229,7 +229,12 @@ class StaffView @JvmOverloads constructor(
             // staffBottomForThisNote：高音或低音譜底線
             // step：這顆音相對底線往上幾個 diatonic step
             // yOffset：整排再往上/下平移一段
-            val noteY = staffBottomForThisNote - step * halfSp + yOffset
+            val noteY = if (step == -2 && staffBottomForThisNote == staffBottom && yOffset == 0f) {
+            // 只對第一排、高音譜的 C4 做微調
+                staffBottomForThisNote - step * halfSp - halfSp * 0.5f
+            } else {
+                staffBottomForThisNote - step * halfSp + yOffset
+            }
 
             // =======================
             // 3. 準備畫筆（符頭 + 符尾）
