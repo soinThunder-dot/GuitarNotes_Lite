@@ -218,7 +218,7 @@ class StaffView @JvmOverloads constructor(
                 }
             }
             // 3. 剛好是 C4， step = -2（E4 底線下兩格）
-            if (isTreble && yOffset == 0f && step == -2) {
+            if (isTreble && step == -2) {
                 val ly = staffBottom + 2 * halfSp      // 直接用高音譜的 staffBottom，不靠 staffBottomForThisNote
                 canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
             }
@@ -229,12 +229,7 @@ class StaffView @JvmOverloads constructor(
             // staffBottomForThisNote：高音或低音譜底線
             // step：這顆音相對底線往上幾個 diatonic step
             // yOffset：整排再往上/下平移一段
-            val noteY = if (step == -2 && staffBottomForThisNote == staffBottom && yOffset == 0f) {
-            // 只對第一排、高音譜的 C4 做微調
-                staffBottomForThisNote - step * halfSp - halfSp * 0.5f
-            } else {
-                staffBottomForThisNote - step * halfSp + yOffset
-            }
+            val noteY = staffBottomForThisNote - step * halfSp + yOffset
 
             // =======================
             // 3. 準備畫筆（符頭 + 符尾）
