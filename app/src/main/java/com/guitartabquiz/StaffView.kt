@@ -190,7 +190,7 @@ class StaffView @JvmOverloads constructor(
 
         ) {
             // 半徑跟 lineSpacing 綁在一起，放大縮小螢幕時會跟著變
-            val r = lineSpacing * 0.5f
+            val r = lineSpacing * (2f / 3f)   // ≈ 0.6667 * lineSpacing
 
             // =======================
             // 1. 畫加線（高於/低於五線）
