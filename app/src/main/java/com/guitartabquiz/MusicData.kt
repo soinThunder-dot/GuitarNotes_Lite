@@ -145,7 +145,7 @@ add(Note("${noteNames[i]}$octave", notated, notated - 12))                // 例
 
         // 掃描所有 6 弦 × 24 格 = 144 個格子
         for (s in 1..6) {           // s = 弦號 1..6
-            for (f in 0..23) {      // f = 格號 0..23
+            for (f in 0..24) {      // f = 格號 0..23
 
                 val tp = TabPosition(s, f)  // 建立格子物件
                 val m = tp.midiActual()     // 計算此格的實際音高
