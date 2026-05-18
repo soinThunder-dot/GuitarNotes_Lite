@@ -143,7 +143,7 @@ class StaffView @JvmOverloads constructor(
             val y = bassBottom - i * lineSpacing
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
         }
-        clefPaint.textSize = lineSpacing * 1.6f
+        clefPaint.textSize = lineSpacing * 2.2f
         canvas.drawText("\uD834\uDD22", staffLeft - 16f,
             bassBottom - lineSpacing * 0.5f, clefPaint)
 
@@ -218,8 +218,8 @@ class StaffView @JvmOverloads constructor(
                 }
             }
             // 3. 剛好是 C4， step = -2（E4 底線下兩格）
-            if (step == -2) { //    用 isTreble 判斷是哪組，midY 就是那條線的 Y
-                val ly = staffBottomForThisNote + 2 * halfSp + yOffset
+            if (isTreble && yOffset == 0f && step == -2) {
+                val ly = staffBottom + 2 * halfSp      // 直接用高音譜的 staffBottom，不靠 staffBottomForThisNote
                 canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
             }
 
