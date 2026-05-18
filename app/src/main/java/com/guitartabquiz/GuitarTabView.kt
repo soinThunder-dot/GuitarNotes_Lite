@@ -1,6 +1,6 @@
 // ========================================================
 // 檔案：GuitarTabView.kt
-// 用途：繪製 6 弦 × 24 格互動指板（144 個可點擊格子）
+// 用途：繪製 6 弦 × 25 格互動指板（150 個可點擊格子）
 //       玩家點擊格子後，透過 callback 通知 MainActivity
 //       支持 5 種格子狀態：IDLE / SELECTED / CORRECT / WRONG / HINT
 // ========================================================
@@ -28,7 +28,7 @@ class GuitarTabView @JvmOverloads constructor(
     // ----------------------------------------------------
     companion object {
         const val NUM_STRINGS = 6   // 6 條弦
-        const val NUM_FRETS = 24    // 24 個格（0..23）
+        const val NUM_FRETS = 25    // 25 個格（0..24）
     }
 
     // ========================================================
@@ -188,7 +188,7 @@ enum class CellState {
             canvas.drawText(stringNames[s], boardLeft * 0.5f, cy + textPaint.textSize * 0.35f, textPaint)
         }
 
-        // --- 繪 6×24 = 144 個格子 ---
+        // --- 繪 6×25 = 150 個格子 ---
         for (s in 0 until NUM_STRINGS) {
             for (f in 0 until NUM_FRETS) {
                 val left = boardLeft + f * cellW
