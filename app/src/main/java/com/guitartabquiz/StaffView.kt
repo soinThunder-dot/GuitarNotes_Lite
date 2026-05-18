@@ -190,7 +190,7 @@ class StaffView @JvmOverloads constructor(
 
         ) {
             // 半徑跟 lineSpacing 綁在一起，放大縮小螢幕時會跟著變
-            val r = lineSpacing * 0.45f
+            val r = lineSpacing * 0.5f
 
             // =======================
             // 1. 畫加線（高於/低於五線）
@@ -218,7 +218,7 @@ class StaffView @JvmOverloads constructor(
                 }
             }
             // 3. 剛好是 C4， step = -2（E4 底線下兩格）
-            if (isTreble && step == -2) { //    用 isTreble 判斷是哪組，midY 就是那條線的 Y
+            if (step == -2) { //    用 isTreble 判斷是哪組，midY 就是那條線的 Y
                 val ly = staffBottomForThisNote + 2 * halfSp + yOffset
                 canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
             }
@@ -249,9 +249,9 @@ class StaffView @JvmOverloads constructor(
             // =======================
             canvas.drawOval(
                 noteX - r * 1.1f,
-                noteY - r * 0.75f,
+                noteY - r * 0.9f,
                 noteX + r * 1.1f,
-                noteY + r * 0.75f,
+                noteY + r * 0.9f,
                 notePaint
             )
 
