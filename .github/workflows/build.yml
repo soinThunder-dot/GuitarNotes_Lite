@@ -34,6 +34,20 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
+            - name: Rename APK with build number
+      run: |
+        BUILD_NUM=${{ github.run_number }}
+        mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/GuitarNotes_Lite_build${BUILD_NUM}.apk
+        
+    - name: Create Release and Upload APK
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: build-${{ github.run_number }}
+        name: Build ${{ github.run_number }}
+        files: app/build/outputs/apk/debug/GuitarNotes_Lite_build*.apk
+        draft: false
+        prerelease: false
+
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
