@@ -6,19 +6,19 @@
     
     <!-- 5 条五線譜線 -->
     <path
-        android:strokeColor="#FFFFFF"        android:strokeWidth="0.8"
+        android:strokeColor="#000000"        android:strokeWidth="0.8"
         android:pathData="M8,14 L40,14" />
     <path
-        android:strokeColor="#FFFFFF"        android:strokeWidth="0.8"
+        android:strokeColor="#000000"        android:strokeWidth="0.8"
         android:pathData="M8,20 L40,20" />
     <path
-        android:strokeColor="#FFFFFF"        android:strokeWidth="0.8"
+        android:strokeColor="#000000"        android:strokeWidth="0.8"
         android:pathData="M8,26 L40,26" />
     <path
-        android:strokeColor="#FFFFFF"        android:strokeWidth="0.8"
+        android:strokeColor="#000000"        android:strokeWidth="0.8"
         android:pathData="M8,32 L40,32" />
     <path
-        android:strokeColor="#FFFFFF"        android:strokeWidth="0.8"
+        android:strokeColor="#000000"        android:strokeWidth="0.8"
         android:pathData="M8,38 L40,38" />
     
     <!-- 藍色 G 字母 -->
