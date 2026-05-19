@@ -249,9 +249,9 @@ class StaffView @JvmOverloads constructor(
             // =======================
             canvas.drawOval(
                 noteX - r * 1.1f,
-                noteY - r * 0.75f,
+                noteY - r * 0.7f,
                 noteX + r * 1.1f,
-                noteY + r * 0.75f,
+                noteY + r * 0.7f,
                 notePaint
             )
 
