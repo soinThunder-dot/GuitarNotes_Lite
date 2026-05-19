@@ -1,0 +1,46 @@
+name: Android Build  #106
+
+on:
+  push:
+    paths:
+      - 'app/build.gradle'   # 只有這個檔被改動才觸發
+  pull_request:
+    paths:
+      - '.github/workflows/build.yml'   # 開 PR 且有改這個檔，也會觸發
+  workflow_dispatch:                    # 手動依然可以跑
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Download Gradle Wrapper JAR
+        run: |
+          mkdir -p gradle/wrapper
+          curl -L -o gradle/wrapper/gradle-wrapper.jar \
+            https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GuitarNotes_Lite-debug-${{ github.run_number }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
