@@ -133,12 +133,12 @@ class StaffView @JvmOverloads constructor(
         }
 
         // ==== 畫高音譜號 ====
-        clefPaint.textSize = lineSpacing * 4.4f
+        clefPaint.textSize = lineSpacing * 3.5f
         canvas.drawText("\uD834\uDD1E", staffLeft - 1f,
             staffBottom + lineSpacing * 0.75f, clefPaint)
 
         // ==== 畫低音五線 + 低音譜號（間隔正好 1 條看不見的線）====
-        val bassBottom = staffBottom + lineSpacing * 6f
+        val bassBottom = staffBottom + lineSpacing * 4f
         for (i in 0..4) {
             val y = bassBottom - i * lineSpacing
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
