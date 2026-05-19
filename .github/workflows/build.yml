@@ -3,7 +3,7 @@ name: Android Build  #106
 on:
   push:
     paths:
-      - '.github/workflows/build.yml'   # 只有這個檔被改動才觸發
+      - 'app/build.gradle'   # 只有這個檔被改動才觸發
   pull_request:
     paths:
       - '.github/workflows/build.yml'   # 開 PR 且有改這個檔，也會觸發
