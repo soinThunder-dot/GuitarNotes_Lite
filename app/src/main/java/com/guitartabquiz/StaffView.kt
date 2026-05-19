@@ -168,12 +168,6 @@ class StaffView @JvmOverloads constructor(
             (noteAreaW / 2f) * 0.6f
         }
 
-        // ==== 第二組音符的「整排 Y 位移」 ====
-        // 注意：這個只會影響 2nd set（下面 forEach 傳 yOffset 的地方）
-        //      1st set 一律用 yOffset = 0f，絕對不會被影響
-        // 想要兩排靠更近 / 更遠，就改這個數字
-        val secondSetOffsetY = lineSpacing * 4f   // ★★★ 第二組整排往下移 4 個 lineSpacing ★★★
-
         // ==========================================================
         // 把「畫一顆音符」寫成一個函式，1st / 2nd 兩組共同呼叫
         // 千萬注意：
@@ -361,8 +355,13 @@ class StaffView @JvmOverloads constructor(
         notes.forEachIndexed { idx, note ->
             // 1. 一樣用原始 note 的 midiActual 決定高音/低音譜
             val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
-            val currentStaffBottom = if (note.midiActual >= 60) staffBottom else bassBottom
-                    val isTreble = note.midiActual >= 60
+            val isTreble = note.midiActual >= 60
+            // ★★★ 關鍵修正：把 offset 加到 staffBottom 上，而不是用 yOffset ★★★
+            val currentStaffBottom = if (isTreble) {
+                staffBottom + secondSetOffsetY    // 高音譜底線往下移
+            } else {
+                bassBottom + secondSetOffsetY     // 低音譜底線往下移
+            }
 
             // 2. 水平位置跟第一組完全相同，這樣兩組會垂直對齊
             val noteX = if (notes.size == 1) {
@@ -394,7 +393,7 @@ class StaffView @JvmOverloads constructor(
                 state = state,
                 noteColor = noteColor,
                 label = labelB,           // 你要改成別的字（例如「+8」）也在這裡改
-                yOffset = secondSetOffsetY,// ★★★ 第二組就是靠這個整排往下移
+                yOffset = 0f,    // ★★★ 這裡改成 0f，因為 offset 已經在 staffBottom 裡了
                 isTreble = isTreble 
             )
         }
