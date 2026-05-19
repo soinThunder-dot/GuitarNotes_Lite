@@ -354,7 +354,7 @@ class StaffView @JvmOverloads constructor(
         // ★★★ 注意：這裡只改「看起來的顏色」，完全不改 noteStates 的值
         notes.forEachIndexed { idx, note ->
             // 1. 一樣用原始 note 的 midiActual 決定高音/低音譜
-            val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
+            val step = if (note.midiActual >= 60) trebleStep(note)-1 else bassStep(note)-1
             val isTreble = note.midiActual >= 60
             // ★★★ 關鍵修正：把 offset 加到 staffBottom 上，而不是用 yOffset ★★★
             val currentStaffBottom = if (isTreble) {
