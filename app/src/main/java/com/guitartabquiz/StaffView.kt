@@ -358,9 +358,9 @@ class StaffView @JvmOverloads constructor(
             val isTreble = note.midiActual >= 60
             // ★★★ 關鍵修正：把 offset 加到 staffBottom 上，而不是用 yOffset ★★★
             val currentStaffBottom = if (isTreble) {
-                staffBottom + secondSetOffsetY    // 高音譜底線往下移
+                staffBottom + lineSpacing * 4f    // ← 整個高音譜底線往下移 4 格
             } else {
-                bassBottom + secondSetOffsetY     // 低音譜底線往下移
+                bassBottom + lineSpacing * 4f
             }
 
             // 2. 水平位置跟第一組完全相同，這樣兩組會垂直對齊
