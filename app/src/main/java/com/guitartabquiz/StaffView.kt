@@ -135,7 +135,7 @@ class StaffView @JvmOverloads constructor(
         // ==== 畫高音譜號 ====
         clefPaint.textSize = lineSpacing * 3.5f
         canvas.drawText("\uD834\uDD1E", staffLeft - 1f,
-            staffBottom + lineSpacing * 0.75f, clefPaint)
+            staffBottom + lineSpacing * 1.25f, clefPaint)
 
         // ==== 畫低音五線 + 低音譜號（間隔正好 1 條看不見的線）====
         val bassBottom = staffBottom + lineSpacing * 4f
@@ -143,9 +143,9 @@ class StaffView @JvmOverloads constructor(
             val y = bassBottom - i * lineSpacing
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
         }
-        clefPaint.textSize = lineSpacing * 6.6f
+        clefPaint.textSize = lineSpacing * 5.5f
         canvas.drawText("\uD834\uDD22", staffLeft - 1f,
-            bassBottom - lineSpacing * 0.5f, clefPaint)
+            bassBottom - lineSpacing * 1.5f, clefPaint)
 
         // ============================================
         // ======= 從這裡開始：只負責畫音符區塊 =======
@@ -358,9 +358,9 @@ class StaffView @JvmOverloads constructor(
             val isTreble = note.midiActual >= 60
             // ★★★ 關鍵修正：把 offset 加到 staffBottom 上，而不是用 yOffset ★★★
             val currentStaffBottom = if (isTreble) {
-                staffBottom + lineSpacing * 4f    // ← 整個高音譜底線往下移 4 格
+                staffBottom + lineSpacing * 3.5f    // ← 整個高音譜底線往下移 4 格
             } else {
-                bassBottom + lineSpacing * 4f
+                bassBottom + lineSpacing * 3.5f
             }
 
             // 2. 水平位置跟第一組完全相同，這樣兩組會垂直對齊
