@@ -18,7 +18,10 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.widget.*
-import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivitylin
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
 
 /**
  * [Activity Class] MainActivity — 主畫面 Activity（繼承 AppCompatActivity）
@@ -187,14 +190,42 @@ class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------
     private fun showCurrentQuestion() {
         if (currentIndex >= totalPerRound) return
-
         val note = currentNotes[currentIndex]
+        // 1) 把 "C4" 拆成字母 + 八度
+        val pitch = note.name.dropLast(1)          // "C4" -> "C"
+        val octave = note.name.last().digitToInt() // 4
+        // 2) 鋼琴實際音 = 低一個八度
+        val pianoNoteName = pitch + (octave - 1).toString()   // "C3"
+        // 3) 狀態列文字：同時顯示吉他 & 鋼琴
         // 顯示「Note 1 / 8 — Find: C4」
-        statusLabel.text = "Note ${currentIndex + 1} / $totalPerRound — Find: ${note.name}"
-
+        // 整句文字
+        val baseText = "Note ${currentIndex + 1} / $totalPerRound — Find: ${note.name}"
+        val pianoPart = "  (piano $pianoNoteName)"
+        val fullText = baseText + pianoPart
+    
+        val spannable = SpannableStringBuilder(fullText)
+    
+        // 整句先用金色（跟你原本 TextView 顏色一樣）
+        val gold = Color.parseColor("#FFD700")
+        spannable.setSpan(
+            ForegroundColorSpan(gold),
+            0,
+            baseText.length,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+    
+        // piano 部分改成藍色
+        val blue = Color.parseColor("#42A5F5")
+        spannable.setSpan(
+            ForegroundColorSpan(blue),
+            baseText.length,         // 從 '(' 開始
+            fullText.length,         // 到字串結尾
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+    
+        statusLabel.text = spannable
         // 清空反饋文字
         feedbackLabel.text = ""
-
         // 重置指板格子狀態（讓使用者可以點擊）
         fretboard.resetAllCells()
     }
