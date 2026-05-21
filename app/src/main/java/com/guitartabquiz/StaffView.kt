@@ -133,23 +133,23 @@ class StaffView @JvmOverloads constructor(
         }
 
         // ==== 畫高音譜號 ====
-        clefPaint.textSize = lineSpacing * 3.5f
-        canvas.drawText("\uD834\uDD1E", staffLeft - 1f,
-            staffBottom + lineSpacing * 1.25f, clefPaint)
+        clefPaint.textSize = lineSpacing * 2.2f
+        canvas.drawText("\uD834\uDD1E", staffLeft + 5f,
+            staffBottom + lineSpacing * 0.75f, clefPaint)
 
         // ==== 畫低音五線 + 低音譜號（間隔正好 1 條看不見的線）====
-        val bassBottom = staffBottom + lineSpacing * 4f
+        val bassBottom = staffBottom + lineSpacing * 6f
         for (i in 0..4) {
             val y = bassBottom - i * lineSpacing
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
         }
-        clefPaint.textSize = lineSpacing * 5.5f
-        canvas.drawText("\uD834\uDD22", staffLeft - 1f,
-            bassBottom - lineSpacing * 1.5f, clefPaint)
+        clefPaint.textSize = lineSpacing * 2.7f
+        canvas.drawText("\uD834\uDD22", staffLeft + 5f,
+            bassBottom - lineSpacing * 0.5f, clefPaint)
 
         // ============================================
         // ======= 從這裡開始：只負責畫音符區塊 =======
-        // ========================================
+        // ============================================
 
         // ★★★ 如果沒有音符資料，直接結束，不畫任何音符 ★★★
         if (notes.isEmpty()) return
@@ -354,13 +354,13 @@ class StaffView @JvmOverloads constructor(
         // ★★★ 注意：這裡只改「看起來的顏色」，完全不改 noteStates 的值
         notes.forEachIndexed { idx, note ->
             // 1. 一樣用原始 note 的 midiActual 決定高音/低音譜
-            val step = if (note.midiActual >= 60) trebleStep(note)-1 else bassStep(note)-1
+            val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
             val isTreble = note.midiActual >= 60
             // ★★★ 關鍵修正：把 offset 加到 staffBottom 上，而不是用 yOffset ★★★
             val currentStaffBottom = if (isTreble) {
-                staffBottom + lineSpacing * 3.5f    // ← 整個高音譜底線往下移 4 格
+                staffBottom + lineSpacing * 4f    // ← 整個高音譜底線往下移 4 格
             } else {
-                bassBottom + lineSpacing * 3.5f
+                bassBottom + lineSpacing * 4f
             }
 
             // 2. 水平位置跟第一組完全相同，這樣兩組會垂直對齊
