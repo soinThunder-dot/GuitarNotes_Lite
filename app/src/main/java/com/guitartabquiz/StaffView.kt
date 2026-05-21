@@ -139,6 +139,7 @@ class StaffView @JvmOverloads constructor(
 
         // ==== 畫低音五線 + 低音譜號（間隔正好 1 條看不見的線）====
         val bassBottom = staffBottom + lineSpacing * 6f
+        val secondRowBottom = staffBottom + lineSpacing * 2f// 新增：第二排（藍色那排）的底線
         for (i in 0..4) {
             val y = bassBottom - i * lineSpacing
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
@@ -356,12 +357,9 @@ class StaffView @JvmOverloads constructor(
             // 1. 一樣用原始 note 的 midiActual 決定高音/低音譜
             val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
             val isTreble = note.midiActual >= 60
-            // ★★★ 關鍵修正：把 offset 加到 staffBottom 上，而不是用 yOffset ★★★
-            val currentStaffBottom = if (isTreble) {
-                staffBottom + lineSpacing * 4f    // ← 整個高音譜底線往下移 4 格
-            } else {
-                bassBottom + lineSpacing * 4f
-            }
+            // 第二排一律用 secondRowBottom，完全不跟 bassBottom 綁死
+            val currentStaffBottom = secondRowBottom
+
 
             // 2. 水平位置跟第一組完全相同，這樣兩組會垂直對齊
             val noteX = if (notes.size == 1) {
@@ -393,7 +391,7 @@ class StaffView @JvmOverloads constructor(
                 state = state,
                 noteColor = noteColor,
                 label = labelB,           // 你要改成別的字（例如「+8」）也在這裡改
-                yOffset = -1f,    // ★★★ 這裡改成 0f，因為 offset 已經在 staffBottom 裡了
+                yOffset = 0f,    // ★★★ 這裡改成 0f，因為 offset 已經在 staffBottom 裡了
                 isTreble = isTreble 
             )
         }
