@@ -139,7 +139,7 @@ class StaffView @JvmOverloads constructor(
 
         // ==== 畫低音五線 + 低音譜號（間隔正好 1 條看不見的線）====
         val bassBottom = staffBottom + lineSpacing * 6f
-        val secondRowBottom = staffBottom + lineSpacing * 2f// 新增：第二排（藍色那排）的底線
+        val secondRowBottom = staffBottom + lineSpacing * 3.5f// 新增：第二排（藍色那排）的底線
         for (i in 0..4) {
             val y = bassBottom - i * lineSpacing
             canvas.drawLine(staffLeft, y, staffRight, y, staffPaint)
