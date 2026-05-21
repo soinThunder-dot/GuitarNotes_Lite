@@ -393,7 +393,7 @@ class StaffView @JvmOverloads constructor(
                 state = state,
                 noteColor = noteColor,
                 label = labelB,           // 你要改成別的字（例如「+8」）也在這裡改
-                yOffset = 0f,    // ★★★ 這裡改成 0f，因為 offset 已經在 staffBottom 裡了
+                yOffset = -1f,    // ★★★ 這裡改成 0f，因為 offset 已經在 staffBottom 裡了
                 isTreble = isTreble 
             )
         }
