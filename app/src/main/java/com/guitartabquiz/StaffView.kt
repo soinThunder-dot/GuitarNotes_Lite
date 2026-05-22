@@ -182,6 +182,7 @@ class StaffView @JvmOverloads constructor(
             label: String,                // 要顯示在下面的文字（音名或別的）
             yOffset: Float,                // 額外 Y 位移（1st = 0；2nd = secondSetOffsetY）
             isTreble: Boolean        // ★★★ 新增：告訴這個函式是高音還是低音 ★★★
+            isFirstSet: Boolean      // ★ 新增：true = 第一排, false = 第二排   
 
         ) {
             // 半徑跟 lineSpacing 綁在一起，放大縮小螢幕時會跟著變
@@ -192,7 +193,7 @@ class StaffView @JvmOverloads constructor(
             // =======================
             // ★★★ 注意：這邊用的是 step / staffBottomForThisNote / yOffset，
             //      所以 1st / 2nd 的「加線位置」跟音符位置完全一致，不會飄掉
-            if (!isTreble && step < 0) {// 1. 高音譜「上方」出界（step > 8 = 高於 F5）
+            if (!isTreble && step < 0 && !isFirstSet ) {// 1. 高音譜「上方」出界（step > 8 = 高於 F5）
                 var s = -2
                 while (s >= step) {
                     val ly = staffBottomForThisNote - s * halfSp + yOffset
@@ -202,7 +203,7 @@ class StaffView @JvmOverloads constructor(
                     s -= 2
                 }
             }
-            if (isTreble && step > 8) {// 2. 低音譜「下方」出界（step < 0 = 低於 G2）
+            if (isTreble && step > 8 && !isFirstSet ) {// 2. 低音譜「下方」出界（step < 0 = 低於 G2）
                 var s = 10
                 while (s <= step) {
                     val ly = staffBottomForThisNote - s * halfSp + yOffset
@@ -213,7 +214,7 @@ class StaffView @JvmOverloads constructor(
                 }
             }
             // 3. 剛好是 C4， step = -2（E4 底線下兩格）
-            if (isTreble && step == -2) {
+            if (step == -2) {
                 val ly = staffBottom + 2 * halfSp      // 直接用高音譜的 staffBottom，不靠 staffBottomForThisNote
                 canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
             }
@@ -341,7 +342,8 @@ class StaffView @JvmOverloads constructor(
                 noteColor = noteColor,
                 label = note.name,  // 第一組顯示原本音名
                 yOffset = 0f,      // ★★★ 第一組絕對不要改這個（0 就是原始高度）
-                isTreble = isTreble 
+                isTreble = isTreble,
+                isFirstSet = true
             )
         }
 
@@ -359,7 +361,7 @@ class StaffView @JvmOverloads constructor(
             val step = if (note.midiActual >= 60) trebleStep(note) else bassStep(note)
             // ★ 關鍵：這裡用「同一個 staffBottom」，但只透過 yOffset 整排往下移
             val staffBottomForThisNote = if (isTreble) staffBottom else bassBottom
-            val secondRowOffset = lineSpacing * 1.5f   // 先試 2f，看覺得高還低
+            val secondRowOffset = lineSpacing * 3.5f   // 先試 2f，看覺得高還低
 
 
             // 2. 水平位置跟第一組完全相同，這樣兩組會垂直對齊
@@ -393,7 +395,8 @@ class StaffView @JvmOverloads constructor(
                 noteColor = noteColor,
                 label = labelB,           // 你要改成別的字（例如「+8」）也在這裡改
                 yOffset = secondRowOffset,    // ★★★ 這裡改成 1.5f，offset + staffBottom 
-                isTreble = isTreble 
+                isTreble = isTreble,
+                isFirstSet = false
             )
         }
 
