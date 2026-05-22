@@ -181,9 +181,8 @@ class StaffView @JvmOverloads constructor(
             noteColor: Int,               // 這顆要用什麼顏色畫（呼叫者決定）
             label: String,                // 要顯示在下面的文字（音名或別的）
             yOffset: Float,                // 額外 Y 位移（1st = 0；2nd = secondSetOffsetY）
-            isTreble: Boolean        // ★★★ 新增：告訴這個函式是高音還是低音 ★★★
+            isTreble: Boolean,        // ★★★ 新增：告訴這個函式是高音還是低音 ★★★
             isFirstSet: Boolean      // ★ 新增：true = 第一排, false = 第二排   
-
         ) {
             // 半徑跟 lineSpacing 綁在一起，放大縮小螢幕時會跟著變
             val r = lineSpacing * (2f / 3f)   // ≈ 0.6667 * lineSpacing
