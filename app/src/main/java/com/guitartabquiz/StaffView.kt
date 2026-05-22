@@ -192,28 +192,31 @@ class StaffView @JvmOverloads constructor(
             // =======================
             // ★★★ 注意：這邊用的是 step / staffBottomForThisNote / yOffset，
             //      所以 1st / 2nd 的「加線位置」跟音符位置完全一致，不會飄掉
-            if (!isTreble && step < 0 && !isFirstSet ) {// 1. 高音譜「上方」出界（step > 8 = 高於 F5）
-                var s = -2
-                while (s >= step) {
-                    val ly = staffBottomForThisNote - s * halfSp + yOffset
-                    canvas.drawLine(
-                        noteX - r * 1.6f,ly,noteX + r * 1.6f,ly,ledgerPaint
-                    )
-                    s -= 2
-                }
-            }
-            if (isTreble && step > 8 && !isFirstSet ) {// 2. 低音譜「下方」出界（step < 0 = 低於 G2）
+            if (isTreble && isFirstSet && step > 8) {// 高音譜「上方」staff：只給第一排 treble（isFirstSet = true）
+                val maxStaffStep = 8          // treble 最高線 F5 的 step
+                val extraSteps = step - maxStaffStep
+                val linesCount = (extraSteps + 1) / 2   // 需要幾條加線
+                // 第一條加線固定從 step=10 開始（F5 上面的那條線）
                 var s = 10
-                while (s <= step) {
+                repeat(linesCount) {
                     val ly = staffBottomForThisNote - s * halfSp + yOffset
-                    canvas.drawLine(
-                        noteX - r * 1.6f,ly,noteX + r * 1.6f,ly,ledgerPaint
-                    )
+                    canvas.drawLine ( noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint) 
                     s += 2
                 }
             }
+            if (!isTreble && !isFirstSet && step < 0) {// 低音譜「下方」staff：只給第二排 bass（isFirstSet = false）
+                val minStaffStep = 0          // bass 第一線 G2 的 step
+                val extraSteps = minStaffStep - step
+                val linesCount = (extraSteps + 1) / 2
+                var s = -2                     // 第一條加線 E2
+                repeat(linesCount) {
+                    val ly = staffBottomForThisNote - s * halfSp + yOffset
+                    canvas.drawLine( noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
+                    s -= 2
+                }
+            }
             // 3. 剛好是 C4， step = -2（E4 底線下兩格）
-            if (step == -2) {
+            if (isTreble && isFirstSet && step == -2) {
                 val ly = staffBottom + 2 * halfSp      // 直接用高音譜的 staffBottom，不靠 staffBottomForThisNote
                 canvas.drawLine(noteX - r * 1.6f, ly, noteX + r * 1.6f, ly, ledgerPaint)
             }
