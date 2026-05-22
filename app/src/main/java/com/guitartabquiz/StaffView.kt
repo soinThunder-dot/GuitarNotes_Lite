@@ -195,7 +195,7 @@ class StaffView @JvmOverloads constructor(
             if (isTreble && isFirstSet && step > 8) {// 高音譜「上方」staff：只給第一排 treble（isFirstSet = true）
                 val maxStaffStep = 8          // treble 最高線 F5 的 step
                 val extraSteps = step - maxStaffStep
-                val linesCount = (extraSteps + 1) / 2   // 需要幾條加線
+                val linesCount = (extraSteps) / 2   // 需要幾條加線
                 // 第一條加線固定從 step=10 開始（F5 上面的那條線）
                 var s = 10
                 repeat(linesCount) {
@@ -207,7 +207,7 @@ class StaffView @JvmOverloads constructor(
             if (!isTreble && !isFirstSet && step < 0) {// 低音譜「下方」staff：只給第二排 bass（isFirstSet = false）
                 val minStaffStep = 0          // bass 第一線 G2 的 step
                 val extraSteps = minStaffStep - step
-                val linesCount = (extraSteps + 1) / 2
+                val linesCount = (extraSteps) / 2
                 var s = -2                     // 第一條加線 E2
                 repeat(linesCount) {
                     val ly = staffBottomForThisNote - s * halfSp + yOffset
@@ -241,32 +241,14 @@ class StaffView @JvmOverloads constructor(
                 style = Paint.Style.STROKE
                 strokeWidth = 1.8f
             }
-
             // =======================
             // 4. 畫符頭（橢圓）
-            // =======================
-            canvas.drawOval(
-                noteX - r * 1.1f,
-                noteY - r * 0.7f,
-                noteX + r * 1.1f,
-                noteY + r * 0.7f,
-                notePaint
-            )
-
+            canvas.drawOval(noteX - r * 1.1f,noteY - r * 0.7f,noteX + r * 1.1f,noteY + r * 0.7f,notePaint)
             // =======================
             // 5. 畫符尾（直線）
-            // =======================
-            canvas.drawLine(
-                noteX + r,
-                noteY,
-                noteX + r,
-                noteY - lineSpacing * 2.8f,
-                stemPaint
-            )
-
+            canvas.drawLine(noteX + r,noteY,noteX + r,noteY - lineSpacing * 2.8f,stemPaint)
             // =======================
             // 6. 畫音名文字（note name）
-            // =======================
             // ★★★ labelPaint 是整個 View 共用的畫筆，
             //     這裡每顆會重新設定 textSize / color
             labelPaint.textSize = lineSpacing * 1.5f
@@ -275,13 +257,7 @@ class StaffView @JvmOverloads constructor(
             val textX = noteX + r * 3f              // 符頭再右邊一點
             val textY = noteY + lineSpacing * 0.2f    // 稍微往下 0.2 格，視覺居中
 
-            canvas.drawText(
-                label,
-                textX,
-                textY,
-                labelPaint
-            )
-
+            canvas.drawText(label,textX,textY,labelPaint)
             // =======================
             // 7. 畫對錯符號（✓ / ✗）
             // =======================
@@ -294,16 +270,9 @@ class StaffView @JvmOverloads constructor(
                     textAlign = Paint.Align.CENTER
                     typeface = Typeface.DEFAULT_BOLD
                 }
-                canvas.drawText(
-                    badge,
-                    noteX,
-                    noteY - lineSpacing * 3.2f,
-                    badgePaint
-                )
+                canvas.drawText(badge,noteX,noteY - lineSpacing * 3.2f,badgePaint)
             }
         }
-
-        // ==========================================================
         // =============== 第一組音符（原始那排） ====================
         // ==========================================================
         // ★★★ 顏色規則：
@@ -401,15 +370,8 @@ class StaffView @JvmOverloads constructor(
                 isFirstSet = false
             )
         }
-
-        // ============================================
         // ======= 到這裡為止：音符區塊結束 ===========
         // ============================================
-        
-
-
-
-
         
         // 右上角模式文字
         val cornerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -442,8 +404,6 @@ class StaffView @JvmOverloads constructor(
         //canvas.drawText(textGuitar, baseX, baseY, cornerPaint)
         canvas.drawText(textGuitar, baseX + widthPiano + widthMid, baseY, cornerPaint )
 
-
-        
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
