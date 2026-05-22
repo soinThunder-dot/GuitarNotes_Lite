@@ -8,11 +8,11 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.guitartabquiz10"
+        applicationId "com.guitartabquiz11"
         minSdk 26
         targetSdk 34
-        versionCode 7
-        versionName "7"
+        versionCode 11
+        versionName "11"
     }
 
     buildTypes {
