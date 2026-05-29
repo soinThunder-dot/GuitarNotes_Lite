@@ -74,6 +74,7 @@ enum class CellState {
     private val colFret = Color.parseColor("#444466")     // 品絲：深灰
     private val colNut = Color.parseColor("#AAAAAA")      // 琴枕（第 0 格）：淺灰
     private val colIdle = Color.parseColor("#1A1A2E")     // IDLE 格子：深色
+    private val colIdleC = Color.parseColor("#3A3A5E")     // IDLE 格子：灰
     private val colSelected = Color.parseColor("#1565C0") // SELECTED：藍色
     private val colCorrect = Color.parseColor("#2E7D32")  // CORRECT：綠色
     private val colWrong = Color.parseColor("#B71C1C")    // WRONG：紅色
@@ -195,10 +196,10 @@ enum class CellState {
                 val top = boardTop + s * cellH
                 val right = left + cellW
                 val bottom = top + cellH
-
+                val isC4Cell = (s == 1 && f == 1)  ||  (s == 2 && f == 5)  ||  (s == 3 && f == 10) || (s == 4 && f == 15) || (s == 5 && f == 20) 
                 // 格子填充顏色（根據狀態）
                 cellPaint.color = when (cellState[s][f]) {
-                    CellState.IDLE -> colIdle
+                    CellState.IDLE -> { if (isC4Cell) {  colIdleC  } else {  colIdle   }  }
                     CellState.SELECTED -> colSelected
                     CellState.CORRECT -> colCorrect
                     CellState.WRONG -> colWrong
