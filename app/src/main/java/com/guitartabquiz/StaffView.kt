@@ -3,6 +3,7 @@ package com.guitartabquiz
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 
 // 謎面狀態：預設（金色）、正確（綠色）、錯誤（紅色）
@@ -21,6 +22,10 @@ class StaffView @JvmOverloads constructor(
     private val bgPaint = Paint().apply {
         color = Color.parseColor("#1A1A2E"); style = Paint.Style.FILL
     }
+    // ★ 新增：C 音區域的淡色底（比背景 #1A1A2E 稍微淡一點）
+    private val cBandPaint = Paint().apply {
+        color = Color.parseColor("#2C2C54"); style = Paint.Style.FILL
+    }
     private val ledgerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#CCCCCC"); strokeWidth = 1.8f;
         style = Paint.Style.STROKE
@@ -37,6 +42,17 @@ class StaffView @JvmOverloads constructor(
     private val colorDefault2 = Color.parseColor("#42A5F5")  // 藍色
     private val colorCorrect = Color.parseColor("#4CAF50")  // 綠色
     private val colorWrong   = Color.parseColor("#F44336")  // 紅色
+
+    // ★ 新增：音名文字開關（true = 顯示音符旁邊的音名，false = 隱藏）
+    var showNoteNames: Boolean = true
+        set(value) { field = value; invalidate() }
+
+    // ★ 新增：開關按鈕的位置（縮放後的畫布座標），給觸控判斷用
+    private val toggleRect = RectF()
+    // ★ 新增：目前的縮放參數（onDraw 時更新），用來把觸控座標轉回畫布座標
+    private var curScale = 1f
+    private var curOriginX = 0f
+    private var curOriginY = 0f
 
     var notes: List<Note> = emptyList()
         set(value) { field = value; noteStates =
@@ -72,6 +88,29 @@ class StaffView @JvmOverloads constructor(
         return stepsFromC0 - 18  // G2 的 stepsFromC0 = 2*7+4 = 18
     }
 
+    // ★ 新增：點擊開關按鈕
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        // 把螢幕座標轉回「縮放前」的畫布座標
+        val px = curOriginX + (event.x - curOriginX) / curScale
+        val py = curOriginY + (event.y - curOriginY) / curScale
+        val hit = toggleRect.contains(px, py)
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> return hit
+            MotionEvent.ACTION_UP -> {
+                if (hit) {
+                    showNoteNames = !showNoteNames
+                    performClick()
+                    return true
+                }
+            }
+        }
+        return super.onTouchEvent(event)
+    }
+
+    override fun performClick(): Boolean {
+        return super.performClick()
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
                 // ==== 1. 取得 View 寬高，先畫背景 ====
@@ -82,6 +121,7 @@ class StaffView @JvmOverloads constructor(
         canvas.save()            // 先存起原本狀態
         val originX = -2f          //         // 1) 把原點移到「畫面右邊中間」最右邊
         val originY = h / 1.5f     // 垂直中心
+        curScale = scaleFactor; curOriginX = originX; curOriginY = originY  // ★ 記錄給觸控用
         canvas.translate(originX, originY)        
         canvas.scale(scaleFactor, scaleFactor)    // 2) 以這個原點為中心做縮放
         canvas.translate(-originX, -originY)      // 3) 再把原點移回去左上（因為計算都是以左上寫的）
@@ -126,6 +166,16 @@ class StaffView @JvmOverloads constructor(
         val lineSpacing = halfSp * 2f   // 兩個 step = 線與線的距離
         val staffBottom = h - bottomMargin - 7f * halfSp
 
+        // ==== ★ 新增：C 音淡色區塊 ====
+        // 範圍：水平 = 五線譜整條線長 (staffLeft ~ staffRight)
+        //       垂直 = 以 C 為中心，上下各 1 個 step（= 兩條線之間的間距 lineSpacing）
+        // 高音譜 step（E4 = 0）上，所有 C 的 step：-9(C3), -2(C4 下加線), 5(C5), 12(C6), 19(C7 上加線)
+        // C4、C7 在五線外（落在加線上），一樣畫同樣大小的區塊
+        for (cStep in intArrayOf(-9, -2, 5, 12, 19)) {
+            val cy = staffBottom - cStep * halfSp
+            canvas.drawRect(staffLeft, cy - halfSp, staffRight, cy + halfSp, cBandPaint)
+        }
+
         // ==== 畫高音五線 ====
         for (i in 0..4) {
             val y = staffBottom - i * lineSpacing   // 每條線相距 lineSpacing 像素
@@ -152,7 +202,8 @@ class StaffView @JvmOverloads constructor(
         // ============================================
 
         // ★★★ 如果沒有音符資料，直接結束，不畫任何音符 ★★★
-        if (notes.isEmpty()) return
+        // ★ 修改：改成只跳過音符區塊，下方的模式文字與開關按鈕仍要畫
+        if (notes.isNotEmpty()) {
 
         // ==== 9. 設定音符在水平方向的分佈（兩組共用） ====
         // noteStartX：所有音符「最左邊」的起點 X，前面三格留給譜號
@@ -221,7 +272,7 @@ class StaffView @JvmOverloads constructor(
             // 2. 算出這顆音符真正要畫的 Y
             // =======================
             // staffBottomForThisNote：高音或低音譜底線
-            // step：這顆音相對底線往上幾個 diatonic step
+            // step：這顆音符相對底線往上幾個 diatonic step
             // yOffset：整排再往上/下平移一段
             val noteY = staffBottomForThisNote - step * halfSp + yOffset
 
@@ -263,20 +314,23 @@ class StaffView @JvmOverloads constructor(
             // =======================
             // 6. 畫音名文字（note name）
             // =======================
-            // ★★★ labelPaint 是整個 View 共用的畫筆，
-            //     這裡每顆會重新設定 textSize / color
-            labelPaint.textSize = lineSpacing * 1.5f
-            labelPaint.color = noteColor
-            labelPaint.textAlign = Paint.Align.LEFT   // 從左邊開始畫，貼在 note 右邊
-            val textX = noteX + r * 3f              // 符頭再右邊一點
-            val textY = noteY + lineSpacing * 0.2f    // 稍微往下 0.2 格，視覺居中
+            // ★ 修改：只有開關為 ON 時才畫音名
+            if (showNoteNames) {
+                // ★★★ labelPaint 是整個 View 共用的畫筆，
+                //     這裡每顆會重新設定 textSize / color
+                labelPaint.textSize = lineSpacing * 1.5f
+                labelPaint.color = noteColor
+                labelPaint.textAlign = Paint.Align.LEFT   // 從左邊開始畫，貼在 note 右邊
+                val textX = noteX + r * 3f              // 符頭再右邊一點
+                val textY = noteY + lineSpacing * 0.2f    // 稍微往下 0.2 格，視覺居中
 
-            canvas.drawText(
-                label,
-                textX,
-                textY,
-                labelPaint
-            )
+                canvas.drawText(
+                    label,
+                    textX,
+                    textY,
+                    labelPaint
+                )
+            }
 
             // =======================
             // 7. 畫對錯符號（✓ / ✗）
@@ -398,14 +452,11 @@ class StaffView @JvmOverloads constructor(
             )
         }
 
+        }  // ★ 音符區塊 if (notes.isNotEmpty()) 結束
+
         // ============================================
         // ======= 到這裡為止：音符區塊結束 ===========
         // ============================================
-        
-
-
-
-
         
         // 右上角模式文字
         val cornerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -438,8 +489,33 @@ class StaffView @JvmOverloads constructor(
         //canvas.drawText(textGuitar, baseX, baseY, cornerPaint)
         canvas.drawText(textGuitar, baseX + widthPiano + widthMid, baseY, cornerPaint )
 
+        // ==== ★ 新增：音名開關按鈕（與 "piano <> guitar" 同一條 Y 軸，放在它右邊）====
+        val tgH = lineSpacing * 1.8f                      // 按鈕高度
+        val tgW = tgH * 2f                                // 按鈕寬度
+        val tgLeft = baseX + totalWidth + lineSpacing * 2f
+        val tgCy = baseY - lineSpacing * 0.55f            // 對齊文字視覺中心
+        toggleRect.set(tgLeft, tgCy - tgH / 2f, tgLeft + tgW, tgCy + tgH / 2f)
+        val trackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+            color = if (showNoteNames) Color.parseColor("#4CAF50") else Color.parseColor("#555566")
+        }
+        canvas.drawRoundRect(toggleRect, tgH / 2f, tgH / 2f, trackPaint)
+        val knobR = tgH / 2f - 3f
+        val knobCx = if (showNoteNames) toggleRect.right - tgH / 2f else toggleRect.left + tgH / 2f
+        val knobPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE; style = Paint.Style.FILL }
+        canvas.drawCircle(knobCx, tgCy, knobR, knobPaint)
+        // 開關旁的說明文字
+        val tgTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            textSize = lineSpacing * 1.4f
+            color = Color.parseColor("#CCCCCC")
+            textAlign = Paint.Align.LEFT
+        }
+        canvas.drawText(
+            if (showNoteNames) "Names ON" else "Names OFF",
+            toggleRect.right + lineSpacing * 0.8f, baseY, tgTextPaint
+        )
 
-        
+        canvas.restore()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
