@@ -50,6 +50,11 @@ class MainActivity : AppCompatActivity() {
     private var currentIndex = 0                           // 目前正在答第幾題（0-based）
     private var score = 0                                  // 目前回合得分
 
+    // ★ 新增：題目音效延遲（毫秒）
+    //   第 1 題：App 啟動 / 新回合開始後等 1 秒再播
+    //   第 2~8 題：上一題按下答案後等 1 秒再播
+    private val quizSoundDelayMs = 1000L
+
     // ---------------------------------------------------------
     // [Activity 生命週期] onCreate() — Activity 建立時執行
     // ---------------------------------------------------------
@@ -158,6 +163,7 @@ class MainActivity : AppCompatActivity() {
     // ---------------------------------------------------------
     private fun startNewRound() {
         // 0.先決定這一 round 用哪一把吉他
+        // ★ 這把吉他（1 或 2）整個回合 8 題都固定，題目音效也用同一把
         val randGuitar = (1..2).random()
         soundManager.setGuitar(randGuitar)
         
@@ -180,6 +186,9 @@ class MainActivity : AppCompatActivity() {
 
         // 6. 顯示第一題的提示
         showCurrentQuestion()
+
+        // 7. ★ 新增：新回合開始 1 秒後，播放第 1 題的音
+        scheduleQuizSound(0)
     }
 
     // ---------------------------------------------------------
@@ -197,6 +206,36 @@ class MainActivity : AppCompatActivity() {
 
         // 重置指板格子狀態（讓使用者可以點擊）
         fretboard.resetAllCells()
+    }
+
+    // ---------------------------------------------------------
+    // ★ 新增：[排程題目音效] scheduleQuizSound() — 等 1 秒後播放該題音符
+    // index = 這個排程是為第幾題（0-based）排的
+    // 如果 1 秒內使用者已經答了這題（currentIndex 已前進），就不播，避免播到舊題
+    // ---------------------------------------------------------
+    private fun scheduleQuizSound(index: Int) {
+        fretboard.postDelayed({
+            if (index != currentIndex || index >= totalPerRound) return@postDelayed
+            playQuizNote(currentNotes[index])
+        }, quizSoundDelayMs)
+    }
+
+    // ---------------------------------------------------------
+    // ★ 新增：[播放題目音符] playQuizNote() — 播放這個音符對應的吉他音檔
+    // 例：題目 F4（midiActual = 53）→ 找出所有能彈出這個音的格子，
+    //     挑格數最小、且 res/raw 真的有檔案的那一個播放
+    // 吉他編號用 soundManager.currentGuitar()，所以整回合 8 題都是同一把
+    // ---------------------------------------------------------
+    private fun playQuizNote(note: Note) {
+        val guitar = soundManager.currentGuitar()
+        val tabs = MusicData.correctTabsForNote(note).sortedBy { it.fret }
+        val tp = tabs.firstOrNull {
+            // 檢查 g{guitar}_s{string}_f{fret} 這個 wav 是否存在
+            resources.getIdentifier("g${guitar}_${it.resourceName()}", "raw", packageName) != 0
+        } ?: return   // 都沒有檔案就不播（避免播出 click 備用音）
+        try {
+            soundManager.play(tp.resourceName())
+        } catch (_: Exception) {}
     }
 
     // ---------------------------------------------------------
@@ -265,10 +304,12 @@ class MainActivity : AppCompatActivity() {
             statusLabel.text = "Round complete!"
             showRoundComplete()
         } else {
-            // 否則，延遲 1.2 秒後顯示下一題
+            // ★ 修改：延遲由 1.2 秒改成 1 秒，讓下一題文字出現的時間和題目音效同步
             fretboard.postDelayed({
                 showCurrentQuestion()
-            }, 1200)
+            }, quizSoundDelayMs)
+            // ★ 新增：按下答案 1 秒後，播放下一題（第 2~8 題）的音
+            scheduleQuizSound(currentIndex)
         }
     }
 
